@@ -771,18 +771,18 @@ const WorkOrder = () => {
             ref={installationFormRef}
           />
         </CemeteryInfo>
-        {localStorage.getItem("role") !== "viewer" ? (
-          <SubmitButton
-            type="button"
-            onClick={triggerActionInChild}
-            style={{
-              marginLeft: "1rem",
-              marginBottom: "2rem",
-            }}
-          >
+        {/* {localStorage.getItem("role") !== "viewer" ? (
+          // <SubmitButton
+          //   type="button"
+          //   onClick={triggerActionInChild}
+          //   style={{
+          //     marginLeft: "1rem",
+          //     marginBottom: "2rem",
+          //   }}
+          // >
             {submissionSuccess ? "Submitted" : "Submit to Upload"}
           </SubmitButton>
-        ) : null}
+        ) : null} */}
       </div>
       {workOrderSaved && (
         <SuccessModal>

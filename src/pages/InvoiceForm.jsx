@@ -304,7 +304,7 @@ const InvoicehtmlForm = () => {
     }
 
     const taxPercentage = 8.25; // Fixed tax percentage
-    const tax = (totalBeforeTax * (taxPercentage / 100)).toFixed(2);
+    const tax = (subTotal * (taxPercentage / 100)).toFixed(2);
     updatedFormData.tax = tax;
 
     // Apply the discount amount

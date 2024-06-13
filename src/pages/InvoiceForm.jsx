@@ -265,7 +265,7 @@ const InvoicehtmlForm = () => {
       // Compute the balance
       const balance = total - depositSum - updatedFormData.deposit;
 
-      updatedFormData.balance = balance;
+      updatedFormData.balance = balance.toFixed(2);
     }
 
     // Calculate subtotal when modelQty or modelPrice changes for all 4 models

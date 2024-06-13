@@ -32,11 +32,21 @@ const WorkOrder = () => {
     customerEmail: "",
     customerName: "",
     customerPhone: "",
-    requestDate: "",
-    followUpDate1: "",
-    followUpDate2: "",
-    approvedDate: "",
-    notesWork: "",
+    cemeteryDate: "",
+    cemeteryFollowUp1: "",
+    cemeteryFollowUp2: "",
+    cemeteryApprovedDate: "",
+    cemeteryNotes: "",
+    photoDate: "",
+    photoFollowUp1: "",
+    photoFollowUp2: "",
+    photoApprovedDate: "",
+    photoNotes: "",
+    bronzeDate: "",
+    bronzeFollowUp1: "",
+    bronzeFollowUp2: "",
+    bronzeApprovedDate: "",
+    bronzeNotes: "",
     cemeteryName: "",
     cemeteryAddress: "",
     cemeteryContact: "",
@@ -103,7 +113,10 @@ const WorkOrder = () => {
       }
       // Set uploaded images to cemeterySubmission
       if (location.state.cemeterySubmission) {
-        const extractedBase64Images = location?.state?.cemeterySubmission?.map(
+        const sortedCemeterySubmission = location.state.cemeterySubmission.sort(
+          (a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt)
+        );
+        const extractedBase64Images = sortedCemeterySubmission.map(
           (item) => item?.base64Data
         );
         setUploadedImages(extractedBase64Images);
@@ -180,11 +193,32 @@ const WorkOrder = () => {
         }
         console.log(formDataToSend);
         formDataToSend.append("username", localStorage.getItem("username"));
-        formDataToSend.append("requestDate", formData.requestDate);
-        formDataToSend.append("followUpDate1", formData.followUpDate1);
-        formDataToSend.append("followUpDate2", formData.followUpDate2);
-        formDataToSend.append("approvedDate", formData.approvedDate);
-        formDataToSend.append("notes", formData.notes);
+
+        formDataToSend.append("cemeteryDate", formData.cemeteryDate);
+        formDataToSend.append("cemeteryFollowUp1", formData.cemeteryFollowUp1);
+        formDataToSend.append("cemeteryFollowUp2", formData.cemeteryFollowUp2);
+        formDataToSend.append(
+          "cemeteryApprovedDate",
+          formData.cemeteryApprovedDate
+        );
+        // formDataToSend.append("cemeteryNotes", formData.cemeteryNotes);
+
+        formDataToSend.append("photoDate", formData.photoDate);
+        formDataToSend.append("photoFollowUp1", formData.photoFollowUp1);
+        formDataToSend.append("photoFollowUp2", formData.photoFollowUp2);
+        formDataToSend.append("photoApprovedDate", formData.photoApprovedDate);
+        // formDataToSend.append("photoNotes", formData.photoNotes);
+
+        formDataToSend.append("bronzeDate", formData.bronzeDate);
+        formDataToSend.append("bronzeFollowUp1", formData.bronzeFollowUp1);
+        formDataToSend.append("bronzeFollowUp2", formData.bronzeFollowUp2);
+        formDataToSend.append(
+          "bronzeApprovedDate",
+          formData.bronzeApprovedDate
+        );
+        // formDataToSend.append("bronzeNotes", formData.bronzeNotes);
+
+        // formDataToSend.append("notes", formData.notes);
         // console.log("testing", formDataToSend);
 
         // Make a POST API call to the /work-order endpoint
@@ -400,12 +434,9 @@ const WorkOrder = () => {
             <div style={{ padding: "1rem" }}>
               <Slider {...settings}>
                 {uploadedImages &&
-                  uploadedImages
-                    .slice()
-                    .reverse()
-                    .map((image, index) => (
-                      <div key={index} className="thumbnail-container">
-                        {/* {localStorage.getItem("role") !== "viewer" ? (
+                  uploadedImages.slice().map((image, index) => (
+                    <div key={index} className="thumbnail-container">
+                      {/* {localStorage.getItem("role") !== "viewer" ? (
                       <span
                         className="delete-button"
                         onClick={() => removeThumbnail(index)}
@@ -413,22 +444,22 @@ const WorkOrder = () => {
                         &#x2716;
                       </span>
                     ) : null} */}
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            height: "100%",
-                          }}
-                        >
-                          <Thumbnail
-                            className="thumbnail"
-                            src={image}
-                            alt="Non-Image file"
-                            onClick={() => handleThumbnailClick(image)}
-                          />
-                        </div>
-                        {/* {formData.cemeterySubmission &&
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          height: "100%",
+                        }}
+                      >
+                        <Thumbnail
+                          className="thumbnail"
+                          src={image}
+                          alt="Non-Image file"
+                          onClick={() => handleThumbnailClick(image)}
+                        />
+                      </div>
+                      {/* {formData.cemeterySubmission &&
                           formData.cemeterySubmission[index] && (
                             <ModifiedDate>
                               Modified:{" "}
@@ -438,16 +469,16 @@ const WorkOrder = () => {
                             </ModifiedDate>
                           )} */}
 
-                        {formData.cemeterySubmission &&
-                          formData.cemeterySubmission[index] && (
-                            <ModifiedDate>
-                              {new Date(
-                                formData.cemeterySubmission[index].modifiedAt
-                              ).toLocaleDateString()}
-                            </ModifiedDate>
-                          )}
-                      </div>
-                    ))}
+                      {formData.cemeterySubmission &&
+                        formData.cemeterySubmission[index] && (
+                          <ModifiedDate>
+                            {new Date(
+                              formData.cemeterySubmission[index].modifiedAt
+                            ).toLocaleDateString()}
+                          </ModifiedDate>
+                        )}
+                    </div>
+                  ))}
               </Slider>
             </div>
 
@@ -621,12 +652,8 @@ const WorkOrder = () => {
           </ModelDetail>
         </ModelInfo>
 
-        <CemeteryInfo>
-          <SectionTitle>Cemetery Information</SectionTitle>
-          <CemeteryDetail>
-            <DetailTitle>Cemetery Name:</DetailTitle>
-            <DetailValue>{formData.cemeteryName}</DetailValue>
-          </CemeteryDetail>
+        <Requests>
+          <SectionTitle>Requests</SectionTitle>
           <div
             style={{
               display: "flex",
@@ -638,79 +665,113 @@ const WorkOrder = () => {
               paddingTop: "15px",
               marginTop: "10px",
               paddingBottom: "15px",
-              marginBottom: "10px",
+              marginBottom: "20px",
+              borderRadius: "10px",
             }}
           >
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div style={{ display: "flex", gap: "10px" }}>
               <div>
-                <label style={{ marginRight: "4px", fontWeight: "bold" }}>
-                  Request
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  Cemetery
                 </label>
                 <input
                   style={{
                     fontWeight: "bold",
-                    padding: "5px",
+                    padding: "4px",
                     border: "solid black 2px",
                   }}
                   type="date"
                   readOnly={localStorage.getItem("role") === "viewer"}
-                  value={formData.requestDate}
+                  value={formData.cemeteryDate}
                   onChange={(e) =>
-                    setFormData({ ...formData, requestDate: e.target.value })
+                    setFormData({ ...formData, cemeteryDate: e.target.value })
                   }
                 />
               </div>
               <div>
-                <label style={{ marginRight: "4px", fontWeight: "bold" }}>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
                   Follow up
                 </label>
                 <input
                   style={{
                     fontWeight: "bold",
-                    padding: "5px",
+                    padding: "4px",
                     border: "solid black 2px",
                   }}
                   type="date"
-                  value={formData.followUpDate1}
+                  value={formData.cemeteryFollowUp1}
                   readOnly={localStorage.getItem("role") === "viewer"}
                   onChange={(e) =>
-                    setFormData({ ...formData, followUpDate1: e.target.value })
+                    setFormData({
+                      ...formData,
+                      cemeteryFollowUp1: e.target.value,
+                    })
                   }
                 />
               </div>
               <div>
-                <label style={{ marginRight: "4px", fontWeight: "bold" }}>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
                   Follow up
                 </label>
                 <input
                   style={{
                     fontWeight: "bold",
-                    padding: "5px",
+                    padding: "4px",
                     border: "solid black 2px",
                   }}
                   type="date"
                   readOnly={localStorage.getItem("role") === "viewer"}
-                  value={formData.followUpDate2}
+                  value={formData.cemeteryFollowUp2}
                   onChange={(e) =>
-                    setFormData({ ...formData, followUpDate2: e.target.value })
+                    setFormData({
+                      ...formData,
+                      cemeteryFollowUp2: e.target.value,
+                    })
                   }
                 />
               </div>
               <div>
-                <label style={{ marginRight: "4px", fontWeight: "bold" }}>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
                   Approved
                 </label>
                 <input
                   style={{
                     fontWeight: "bold",
-                    padding: "5px",
+                    padding: "4px",
                     border: "solid black 2px",
                   }}
                   type="date"
                   readOnly={localStorage.getItem("role") === "viewer"}
-                  value={formData.approvedDate}
+                  value={formData.cemeteryApprovedDate}
                   onChange={(e) =>
-                    setFormData({ ...formData, approvedDate: e.target.value })
+                    setFormData({
+                      ...formData,
+                      cemeteryApprovedDate: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -718,19 +779,23 @@ const WorkOrder = () => {
             <div style={{ display: "flex", marginTop: "15px" }}>
               <label
                 htmlFor="notes"
-                style={{ fontWeight: "bold", marginRight: "4px" }}
+                style={{
+                  marginRight: "3px",
+                  fontWeight: "bold",
+                  fontSize: "15px",
+                }}
               >
                 Notes
               </label>
               <textarea
-                id="notesWork"
-                name="notesWork"
+                id="cemeteryNotes"
+                name="cemeteryNotes"
                 rows="3"
                 cols="85"
                 readOnly={localStorage.getItem("role") === "viewer"}
-                value={formData.notesWork}
+                value={formData.cemeteryNotes}
                 onChange={(e) =>
-                  setFormData({ ...formData, notesWork: e.target.value })
+                  setFormData({ ...formData, cemeteryNotes: e.target.value })
                 }
                 placeholder="Enter notes here"
                 maxLength={360}
@@ -744,6 +809,320 @@ const WorkOrder = () => {
               ></textarea>
             </div>
           </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "#A9A9A9",
+              padding: "5px",
+              paddingTop: "15px",
+              marginTop: "10px",
+              paddingBottom: "15px",
+              marginBottom: "20px",
+              borderRadius: "10px",
+            }}
+          >
+            <div style={{ display: "flex", gap: "12px" }}>
+              <div>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  Photo
+                </label>
+                <input
+                  style={{
+                    fontWeight: "bold",
+                    padding: "4px",
+                    border: "solid black 2px",
+                  }}
+                  type="date"
+                  readOnly={localStorage.getItem("role") === "viewer"}
+                  value={formData.photoDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, photoDate: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  Follow up
+                </label>
+                <input
+                  style={{
+                    fontWeight: "bold",
+                    padding: "4px",
+                    border: "solid black 2px",
+                  }}
+                  type="date"
+                  value={formData.photoFollowUp1}
+                  readOnly={localStorage.getItem("role") === "viewer"}
+                  onChange={(e) =>
+                    setFormData({ ...formData, photoFollowUp1: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  Follow up
+                </label>
+                <input
+                  style={{
+                    fontWeight: "bold",
+                    padding: "4px",
+                    border: "solid black 2px",
+                  }}
+                  type="date"
+                  readOnly={localStorage.getItem("role") === "viewer"}
+                  value={formData.photoFollowUp2}
+                  onChange={(e) =>
+                    setFormData({ ...formData, photoFollowUp2: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  Approved
+                </label>
+                <input
+                  style={{
+                    fontWeight: "bold",
+                    padding: "4px",
+                    border: "solid black 2px",
+                  }}
+                  type="date"
+                  readOnly={localStorage.getItem("role") === "viewer"}
+                  value={formData.photoApprovedDate}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      photoApprovedDate: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <div style={{ display: "flex", marginTop: "15px" }}>
+              <label
+                htmlFor="notes"
+                style={{
+                  marginRight: "3px",
+                  fontWeight: "bold",
+                  fontSize: "15px",
+                }}
+              >
+                Notes
+              </label>
+              <textarea
+                id="photoNotes"
+                name="photoNotes"
+                rows="3"
+                cols="85"
+                readOnly={localStorage.getItem("role") === "viewer"}
+                value={formData.photoNotes}
+                onChange={(e) =>
+                  setFormData({ ...formData, photoNotes: e.target.value })
+                }
+                placeholder="Enter notes here"
+                maxLength={360}
+                style={{
+                  fontWeight: "bold",
+                  border: "solid black 2px",
+                  borderRadius: "10px",
+                  padding: "5px",
+                  maxWidth: "100%",
+                }}
+              ></textarea>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "#A9A9A9",
+              padding: "5px",
+              paddingTop: "15px",
+              marginTop: "10px",
+              paddingBottom: "15px",
+              marginBottom: "10px",
+              borderRadius: "10px",
+            }}
+          >
+            <div style={{ display: "flex", gap: "12px" }}>
+              <div>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  Bronze
+                </label>
+                <input
+                  style={{
+                    fontWeight: "bold",
+                    padding: "4px",
+                    border: "solid black 2px",
+                  }}
+                  type="date"
+                  readOnly={localStorage.getItem("role") === "viewer"}
+                  value={formData.bronzeDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bronzeDate: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  Follow up
+                </label>
+                <input
+                  style={{
+                    fontWeight: "bold",
+                    padding: "4px",
+                    border: "solid black 2px",
+                  }}
+                  type="date"
+                  value={formData.bronzeFollowUp1}
+                  readOnly={localStorage.getItem("role") === "viewer"}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      bronzeFollowUp1: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  Follow up
+                </label>
+                <input
+                  style={{
+                    fontWeight: "bold",
+                    padding: "4px",
+                    border: "solid black 2px",
+                  }}
+                  type="date"
+                  readOnly={localStorage.getItem("role") === "viewer"}
+                  value={formData.bronzeFollowUp2}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      bronzeFollowUp2: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    marginRight: "3px",
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  }}
+                >
+                  Approved
+                </label>
+                <input
+                  style={{
+                    fontWeight: "bold",
+                    padding: "4px",
+                    border: "solid black 2px",
+                  }}
+                  type="date"
+                  readOnly={localStorage.getItem("role") === "viewer"}
+                  value={formData.bronzeApprovedDate}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      bronzeApprovedDate: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <div style={{ display: "flex", marginTop: "15px" }}>
+              <label
+                htmlFor="notes"
+                style={{
+                  marginRight: "3px",
+                  fontWeight: "bold",
+                  fontSize: "15px",
+                }}
+              >
+                Notes
+              </label>
+              <textarea
+                id="bronzeNotes"
+                name="bronzeNotes"
+                rows="3"
+                cols="85"
+                readOnly={localStorage.getItem("role") === "viewer"}
+                value={formData.bronzeNotes}
+                onChange={(e) =>
+                  setFormData({ ...formData, bronzeNotes: e.target.value })
+                }
+                placeholder="Enter notes here"
+                maxLength={360}
+                style={{
+                  fontWeight: "bold",
+                  border: "solid black 2px",
+                  borderRadius: "10px",
+                  padding: "5px",
+                  maxWidth: "100%",
+                }}
+              ></textarea>
+            </div>
+          </div>
+        </Requests>
+
+        <CemeteryInfo>
+          <SectionTitle>Cemetery Information</SectionTitle>
+          <CemeteryDetail>
+            <DetailTitle>Cemetery Name:</DetailTitle>
+            <DetailValue>{formData.cemeteryName}</DetailValue>
+          </CemeteryDetail>
           <CemeteryDetail>
             <DetailTitle>Cemetery Address:</DetailTitle>
             <DetailValue>
@@ -771,18 +1150,18 @@ const WorkOrder = () => {
             ref={installationFormRef}
           />
         </CemeteryInfo>
-        {/* {localStorage.getItem("role") !== "viewer" ? (
-          // <SubmitButton
-          //   type="button"
-          //   onClick={triggerActionInChild}
-          //   style={{
-          //     marginLeft: "1rem",
-          //     marginBottom: "2rem",
-          //   }}
-          // >
+        {localStorage.getItem("role") !== "viewer" ? (
+          <SubmitButton
+            type="button"
+            onClick={triggerActionInChild}
+            style={{
+              marginLeft: "1rem",
+              marginBottom: "2rem",
+            }}
+          >
             {submissionSuccess ? "Submitted" : "Submit to Upload"}
           </SubmitButton>
-        ) : null} */}
+        ) : null}
       </div>
       {workOrderSaved && (
         <SuccessModal>
@@ -902,7 +1281,7 @@ const CustomerDesign = styled.div`
 
 const SectionTitle = styled.h3`
   font-size: 24px;
-  color: #333;
+  color: #000;
   margin-bottom: 15px;
 `;
 
@@ -983,6 +1362,15 @@ const CemeteryInfo = styled.div`
 
 const ModelInfo = styled.div`
   background: #e0e6aa;
+  width: 100%;
+  margin: 20px auto;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const Requests = styled.div`
+  background: #45b6;
   width: 100%;
   margin: 20px auto;
   padding: 20px;

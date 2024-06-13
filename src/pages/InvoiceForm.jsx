@@ -155,11 +155,21 @@ const InvoicehtmlForm = () => {
     invoiceNo: "",
     date: "",
     username: "",
-    requestDate: "",
-    followUpDate1: "",
-    followUpDate2: "",
-    approvedDate: "",
-    notesWork: "",
+    cemeteryDate: "",
+    cemeteryFollowUp1: "",
+    cemeteryFollowUp2: "",
+    cemeteryApprovedDate: "",
+    cemeteryNotes: "",
+    photoDate: "",
+    photoFollowUp1: "",
+    photoFollowUp2: "",
+    photoApprovedDate: "",
+    photoNotes: "",
+    bronzeDate: "",
+    bronzeFollowUp1: "",
+    bronzeFollowUp2: "",
+    bronzeApprovedDate: "",
+    bronzeNotes: "",
     cemetery: "",
     cemeteryAddress: "",
     cemeteryContact: "",
@@ -347,11 +357,6 @@ const InvoicehtmlForm = () => {
       format: "letter",
     });
 
-    const pdf2 = new jsPDF({
-      unit: "mm",
-      format: "letter",
-    });
-
     // Capture the form as an image using html-to-image
     const element = document.getElementById("invoice-form");
     const element2 = document.getElementById("work-order-pdf");
@@ -367,7 +372,7 @@ const InvoicehtmlForm = () => {
     }
 
     const imageDataUrl = await htmlToImage.toPng(element);
-    const imageDataUrl2 = await htmlToImage.toPng(element2);
+    const imageDataUrl2 = await htmlToImage.toJpeg(element2, { quality: 0.95 });
 
     // Create an Image object for the captured images
     const img = new Image();
@@ -385,19 +390,22 @@ const InvoicehtmlForm = () => {
       }),
     ]);
 
-    // Add the captured images to the PDFs
-    pdf.addImage(img, "PNG", 0, 0, 215.9, 279.4);
-    pdf2.addImage(img2, "PNG", 0, 0, 215.9, 279.4);
+    // Add the captured images to the PDF
+    pdf.addImage(img, "PNG", 0, 0, 215.9, 279.4); // Letter size: 215.9 x 279.4 mm
 
     // Save the PDFs as blobs
     const pdfBlob = pdf.output("blob");
-    const pdfBlob2 = pdf2.output("blob");
+
+    // Convert img2 (work order) to blob
+    const response = await fetch(imageDataUrl2);
+    const jpgBlob = await response.blob();
 
     // Create a FormData object to send the blobs to the backend
     const finalFormData = new FormData();
     finalFormData.append("pdf", pdfBlob, "invoice.pdf");
-    finalFormData.append("pdf2", pdfBlob2, "work-order.pdf");
+    finalFormData.append("jpg", jpgBlob, "work-order.jpg");
 
+    // Round specified values to two decimal places
     for (const key in formData) {
       if (
         key === "delivery" ||
@@ -409,9 +417,7 @@ const InvoicehtmlForm = () => {
         key === "modelPrice4" ||
         key === "modelPrice5"
       ) {
-        // Check if the string value is not empty
         if (formData[key] !== "") {
-          // Round the value to two decimal places
           formData[key] = parseFloat(formData[key]).toFixed(2);
         }
       }
@@ -425,9 +431,8 @@ const InvoicehtmlForm = () => {
     }
 
     try {
-      // Make an API call to save the PDFs and additional data on the backend
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/save-invoice`, // Replace with your backend API endpoint
+        `${process.env.REACT_APP_API_URL}/save-invoice`,
         finalFormData,
         {
           headers: {
@@ -438,10 +443,8 @@ const InvoicehtmlForm = () => {
       );
 
       if (response.status === 200) {
-        // Success, you can handle it as needed
         console.log("PDFs and data saved successfully");
         console.log(formData);
-        // Show success modal
         setShowPDF(false);
         localStorage.removeItem("invoiceData");
         const updatedFormData = { ...formData, deposit: "" };
@@ -1309,18 +1312,24 @@ const InvoicehtmlForm = () => {
                     <br />
                     <strong>
                       Headstone World is not responsible for errors that appear
+                      <br />
                       in signed and approved orders.
                     </strong>
                     <br />
-                    Clarity of lasered images is not guaranteed for unapproved
-                    resolutions of source images.
                     <br />
+                    Clarity of lasered images is not guaranteed for unapproved
+                    <br />
+                    resolutions of source images.
+                    <br /> <br />
                     Headstone World is subject to shipping delays; time
-                    estimates are subject to change.
+                    estimates
+                    <br />
+                    are subject to change.
                     <br />
                     <br />
                     <strong>
-                      Completed orders left for over 30 days are subject to a
+                      Completed orders left for over 30 days are subject to a{" "}
+                      <br />
                       storage fee.
                     </strong>
                   </p>

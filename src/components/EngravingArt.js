@@ -17,7 +17,10 @@ const EngravingArt = forwardRef(
 
     useEffect(() => {
       if (oldEngravingImage && oldEngravingImage.length > 0) {
-        const extractedBase64Images = oldEngravingImage.map(
+        const sortedEngravingImage = oldEngravingImage.sort(
+          (a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt)
+        );
+        const extractedBase64Images = sortedEngravingImage.map(
           (item) => item?.base64Data
         );
         setEngravingImagesBase64(extractedBase64Images);
@@ -182,12 +185,9 @@ const EngravingArt = forwardRef(
 
           <div style={{ padding: "1rem" }}>
             <Slider {...settings}>
-              {engravingImagesBase64
-                .slice()
-                .reverse()
-                .map((base64Image, index) => (
-                  <div key={index} className="thumbnail-container">
-                    {/* {localStorage.getItem("role") !== "viewer" ? (
+              {engravingImagesBase64.slice().map((base64Image, index) => (
+                <div key={index} className="thumbnail-container">
+                  {/* {localStorage.getItem("role") !== "viewer" ? (
                 <span
                   className="delete-button"
                   onClick={() => removeEngravingImage(index)}
@@ -195,29 +195,29 @@ const EngravingArt = forwardRef(
                   &#x2716;
                 </span>
               ) : null} */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        height: "100%",
-                      }}
-                    >
-                      <Thumbnail
-                        src={base64Image}
-                        alt={`Engraving ${index}`}
-                        onClick={() => handleThumbnailClick(base64Image)}
-                      />
-                    </div>
-                    {oldEngravingImage && oldEngravingImage[index] && (
-                      <ModifiedDate>
-                        {new Date(
-                          oldEngravingImage[index].modifiedAt
-                        ).toLocaleDateString()}
-                      </ModifiedDate>
-                    )}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100%",
+                    }}
+                  >
+                    <Thumbnail
+                      src={base64Image}
+                      alt={`Engraving ${index}`}
+                      onClick={() => handleThumbnailClick(base64Image)}
+                    />
                   </div>
-                ))}
+                  {oldEngravingImage && oldEngravingImage[index] && (
+                    <ModifiedDate>
+                      {new Date(
+                        oldEngravingImage[index].modifiedAt
+                      ).toLocaleDateString()}
+                    </ModifiedDate>
+                  )}
+                </div>
+              ))}
             </Slider>
           </div>
           {selectedImage && (

@@ -20,13 +20,19 @@ const InstallationForm = forwardRef(
 
     useEffect(() => {
       if (foundationInstall && foundationInstall.length > 0) {
-        const extractedBase64Images = foundationInstall.map(
+        const sortedFoundationInstall = foundationInstall.sort(
+          (a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt)
+        );
+        const extractedBase64Images = sortedFoundationInstall.map(
           (item) => item?.base64Data
         );
         setFoundationInstallImagesBase64(extractedBase64Images);
       }
       if (monumentSetting && monumentSetting.length > 0) {
-        const extractedBase64MonumentImages = monumentSetting.map(
+        const sortedMonumentSetting = monumentSetting.sort(
+          (a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt)
+        );
+        const extractedBase64MonumentImages = sortedMonumentSetting.map(
           (item) => item?.base64Data
         );
         setMonumentSettingImagesBase64(extractedBase64MonumentImages);
@@ -253,7 +259,7 @@ const InstallationForm = forwardRef(
           <Slider {...settings}>
             {foundationInstallImagesBase64
               .slice()
-              .reverse()
+
               .map((image, index) => (
                 <div key={index} className="thumbnail-container">
                   {/* {localStorage.getItem("role") !== "viewer" ? (
@@ -308,12 +314,9 @@ const InstallationForm = forwardRef(
         <div style={{ padding: "1rem" }}>
           <Slider {...settings2}>
             {/* Display monument setting images */}
-            {monumentSettingImagesBase64
-              .slice()
-              .reverse()
-              .map((image, index) => (
-                <div key={index} className="thumbnail-container">
-                  {/* {localStorage.getItem("role") !== "viewer" ? (
+            {monumentSettingImagesBase64.slice().map((image, index) => (
+              <div key={index} className="thumbnail-container">
+                {/* {localStorage.getItem("role") !== "viewer" ? (
               <span
                 className="delete-button"
                 onClick={() => removeMonumentImage(index)}
@@ -321,29 +324,29 @@ const InstallationForm = forwardRef(
                 &#x2716;
               </span>
             ) : null} */}
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      height: "100%",
-                    }}
-                  >
-                    <Thumbnail
-                      src={image}
-                      alt="Non-image file"
-                      onClick={() => handleThumbnailClick(image)}
-                    />
-                  </div>
-                  {monumentSetting && monumentSetting[index] && (
-                    <ModifiedDate>
-                      {new Date(
-                        monumentSetting[index].modifiedAt
-                      ).toLocaleDateString()}
-                    </ModifiedDate>
-                  )}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100%",
+                  }}
+                >
+                  <Thumbnail
+                    src={image}
+                    alt="Non-image file"
+                    onClick={() => handleThumbnailClick(image)}
+                  />
                 </div>
-              ))}
+                {monumentSetting && monumentSetting[index] && (
+                  <ModifiedDate>
+                    {new Date(
+                      monumentSetting[index].modifiedAt
+                    ).toLocaleDateString()}
+                  </ModifiedDate>
+                )}
+              </div>
+            ))}
           </Slider>
         </div>
         {/* {localStorage.getItem("role") !== "viewer" ? (

@@ -20,11 +20,19 @@ const ArtComponent = forwardRef(
     // useEffect to set image states
     useEffect(() => {
       if (finalArt && finalArt.length > 0) {
-        const extractedBase64Images = finalArt.map((item) => item?.base64Data);
+        const sortedFinalArt = finalArt.sort(
+          (a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt)
+        );
+        const extractedBase64Images = sortedFinalArt.map(
+          (item) => item?.base64Data
+        );
         setFinalArtImagesBase64(extractedBase64Images);
       }
       if (cemeteryApproval && cemeteryApproval.length > 0) {
-        const extractedBase64CemeteryImages = cemeteryApproval.map(
+        const sortedCemeteryApproval = cemeteryApproval.sort(
+          (a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt)
+        );
+        const extractedBase64CemeteryImages = sortedCemeteryApproval.map(
           (item) => item?.base64Data
         );
         setCemeteryApprovalImagesBase64(extractedBase64CemeteryImages);
@@ -263,12 +271,9 @@ const ArtComponent = forwardRef(
 
           <div style={{ padding: "1rem" }}>
             <Slider {...settings2}>
-              {finalArtImagesBase64
-                .slice()
-                .reverse()
-                .map((base64Image, index) => (
-                  <div key={index} className="thumbnail-container">
-                    {/* {localStorage.getItem("role") !== "viewer" ? (
+              {finalArtImagesBase64.slice().map((base64Image, index) => (
+                <div key={index} className="thumbnail-container">
+                  {/* {localStorage.getItem("role") !== "viewer" ? (
                 <span
                   className="delete-button"
                   onClick={() => removeFinalArtImage(index)}
@@ -276,29 +281,29 @@ const ArtComponent = forwardRef(
                   &#x2716;
                 </span>
               ) : null} */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        height: "100%",
-                      }}
-                    >
-                      <ThumbnailArt
-                        src={base64Image}
-                        alt="Non-image file"
-                        onClick={() => handleThumbnailClick(base64Image)}
-                      />
-                    </div>
-                    {finalArt && finalArt[index] && (
-                      <ModifiedDate>
-                        {new Date(
-                          finalArt[index].modifiedAt
-                        ).toLocaleDateString()}
-                      </ModifiedDate>
-                    )}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100%",
+                    }}
+                  >
+                    <ThumbnailArt
+                      src={base64Image}
+                      alt="Non-image file"
+                      onClick={() => handleThumbnailClick(base64Image)}
+                    />
                   </div>
-                ))}
+                  {finalArt && finalArt[index] && (
+                    <ModifiedDate>
+                      {new Date(
+                        finalArt[index].modifiedAt
+                      ).toLocaleDateString()}
+                    </ModifiedDate>
+                  )}
+                </div>
+              ))}
             </Slider>
           </div>
           {selectedImage && (
@@ -320,7 +325,6 @@ const ArtComponent = forwardRef(
             <Slider {...settings}>
               {cemeteryApprovalImagesBase64
                 .slice()
-                .reverse()
                 .map((base64Image, index) => (
                   <div key={index} className="thumbnail-container">
                     {/* {localStorage.getItem("role") !== "viewer" ? (

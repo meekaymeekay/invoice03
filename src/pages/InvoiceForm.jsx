@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import IconWithText from "../components/IconWithTExt";
 import IconHome from "../assets/icons/home.png";
 import IconSave from "../assets/icons/diskette.png";
-import IconPrint from "../assets/icons/printing.png";
 import BrandingSection from "../components/BrandingSection";
 import HorizontalRule from "../components/HorizontalRule";
 import {
@@ -124,11 +123,6 @@ const InvoicehtmlForm = () => {
     }));
   }, []);
 
-  const handlePrint = (e) => {
-    e.preventDefault(); // Prevent the form submission
-    document.title = "Computerized Invoice";
-    window.print();
-  };
 
   // get old data
   useEffect(() => {
@@ -295,12 +289,7 @@ const InvoicehtmlForm = () => {
     const subTotal = parseFloat(updatedFormData.subTotal);
     const delivery = parseFloat(updatedFormData.delivery);
     const foundation = parseFloat(updatedFormData.foundation);
-    const deposit = parseFloat(updatedFormData.deposit);
-    const balance = parseFloat(updatedFormData.balance);
     const discountAmount = parseFloat(updatedFormData.discount); // Retrieve the discount amount
-
-    const depositIsValid = !isNaN(deposit);
-    const balanceIsValid = !isNaN(balance);
 
     // Calculate the total without discount
     let totalBeforeTax = subTotal;
@@ -390,6 +379,8 @@ const InvoicehtmlForm = () => {
       }),
     ]);
 
+    const resizedImageDataUrl2 = await resizeImageToLetterSize(img2);
+
     // Add the captured images to the PDF
     pdf.addImage(img, "PNG", 0, 0, 215.9, 279.4); // Letter size: 215.9 x 279.4 mm
 
@@ -397,7 +388,7 @@ const InvoicehtmlForm = () => {
     const pdfBlob = pdf.output("blob");
 
     // Convert img2 (work order) to blob
-    const response = await fetch(imageDataUrl2);
+    const response = await fetch(resizedImageDataUrl2);
     const jpgBlob = await response.blob();
 
     // Create a FormData object to send the blobs to the backend
@@ -459,6 +450,15 @@ const InvoicehtmlForm = () => {
       console.error("Error while saving PDFs and data:", error);
       setSaveButtonText("Save");
     }
+  };
+
+  const resizeImageToLetterSize = async (img) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 2100;
+    canvas.height = 2650;
+    ctx.drawImage(img, 0, 0, 2100, 2650);
+    return canvas.toDataURL("image/jpeg", 1);
   };
 
   const handleSubmit = async (e) => {

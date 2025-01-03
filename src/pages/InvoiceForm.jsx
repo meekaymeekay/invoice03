@@ -18,7 +18,7 @@ import jsPDF from "jspdf";
 import * as htmlToImage from "html-to-image";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import WorkOrderPDF from "./WorkOrderPDF";
+import WorkOrderPDF from "./WorkOrderPDF2";
 
 const InvoicehtmlForm = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -123,7 +123,6 @@ const InvoicehtmlForm = () => {
     }));
   }, []);
 
-
   // get old data
   useEffect(() => {
     if (location.state) {
@@ -171,6 +170,8 @@ const InvoicehtmlForm = () => {
     zone: "",
     lotOwner: "",
     lotNumber: "",
+    space: "",
+    section: "",
     customerName: "",
     customerPhone: "",
     customerEmail: "",
@@ -214,6 +215,15 @@ const InvoicehtmlForm = () => {
     customColor5: "",
     modelQty5: "",
     modelPrice5: "",
+    designApproved: false,
+    applicationSubmitted: false,
+    applicationApproved: false,
+    stoneOrdered: false,
+    stoneReceived: false,
+    foundationCheck: false,
+    engraved: false,
+    balancePaid: false,
+    set: false,
   });
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -346,6 +356,11 @@ const InvoicehtmlForm = () => {
       format: "letter",
     });
 
+    const pdf2 = new jsPDF({
+      unit: "mm",
+      format: "letter",
+    });
+
     // Capture the form as an image using html-to-image
     const element = document.getElementById("invoice-form");
     const element2 = document.getElementById("work-order-pdf");
@@ -361,7 +376,7 @@ const InvoicehtmlForm = () => {
     }
 
     const imageDataUrl = await htmlToImage.toPng(element);
-    const imageDataUrl2 = await htmlToImage.toJpeg(element2, { quality: 0.95 });
+    const imageDataUrl2 = await htmlToImage.toPng(element2);
 
     // Create an Image object for the captured images
     const img = new Image();
@@ -381,20 +396,18 @@ const InvoicehtmlForm = () => {
 
     const resizedImageDataUrl2 = await resizeImageToLetterSize(img2);
 
-    // Add the captured images to the PDF
-    pdf.addImage(img, "PNG", 0, 0, 215.9, 279.4); // Letter size: 215.9 x 279.4 mm
+    // Add the captured images to the PDFs
+    pdf.addImage(img, "PNG", 0, 0, 215.9, 279.4);
+    pdf2.addImage(img2, "PNG", 0, 0, 215.9, 279.4);
 
     // Save the PDFs as blobs
     const pdfBlob = pdf.output("blob");
-
-    // Convert img2 (work order) to blob
-    const response = await fetch(resizedImageDataUrl2);
-    const jpgBlob = await response.blob();
+    const pdfBlob2 = pdf2.output("blob");
 
     // Create a FormData object to send the blobs to the backend
     const finalFormData = new FormData();
     finalFormData.append("pdf", pdfBlob, "invoice.pdf");
-    finalFormData.append("jpg", jpgBlob, "work-order.jpg");
+    finalFormData.append("pdf2", pdfBlob2, "work-order.pdf");
 
     // Round specified values to two decimal places
     for (const key in formData) {
@@ -464,9 +477,33 @@ const InvoicehtmlForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaveButtonText("Saving..");
-    localStorage.setItem("invoiceData", JSON.stringify(formData));
-    setShowPDF(true);
+
     try {
+      // Fetch work order data using the API
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/work-order?invoiceNo=${formData.invoiceNo}`,
+        {
+          method: "GET",
+          headers: {
+            "ngrok-skip-browser-warning": "69420",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const workOrderData = await response.json();
+        localStorage.setItem(
+          "artImage",
+          JSON.stringify(workOrderData?.art?.[0]?.base64Data)
+        );
+      } else {
+        console.error("Failed to fetch work order data:", response.statusText);
+      }
+
+      // Save form data locally
+      localStorage.setItem("invoiceData", JSON.stringify(formData));
+      setShowPDF(true);
+
       // Update deposit
       if (!isNaN(parseFloat(formData.deposit))) {
         const depositAmount = parseFloat(formData.deposit);
@@ -476,9 +513,9 @@ const InvoicehtmlForm = () => {
           paymentMethod: formData.paymentMethod,
         };
 
-        // Perform actions like updating state with the deposit
         setDeposits((prevDeposits) => [...prevDeposits, newDeposit]);
       }
+
       // Capture the form snapshot as a PDF
       setTimeout(async () => {
         await captureFormSnapshot();
@@ -586,7 +623,7 @@ const InvoicehtmlForm = () => {
                       Cemetery:
                     </label>
                   </th>
-                  <td colSpan="3">
+                  <td colSpan="4">
                     <select
                       id="cemetery"
                       name="cemetery"
@@ -606,11 +643,14 @@ const InvoicehtmlForm = () => {
                     {selectedCemetery === "Other" && (
                       <input
                         type="text"
+                        id="customCemetery"
+                        readOnly={localStorage.getItem("role") === "viewer"}
                         name="customCemetery"
                         value={customCemetery}
                         onChange={handleInputChange}
                         placeholder="Enter Cemetery Name"
                         onKeyPress={handleKeyPress}
+                        style={{ fontWeight: "bold" }}
                       />
                     )}
                   </td>
@@ -621,7 +661,7 @@ const InvoicehtmlForm = () => {
                       Address:
                     </label>
                   </th>
-                  <td>
+                  <td colSpan={3}>
                     <input
                       type="text"
                       id="address"
@@ -633,7 +673,7 @@ const InvoicehtmlForm = () => {
                       style={{ fontWeight: "bold" }}
                     />
                   </td>
-                  <th>
+                  <th style={{ width: "80px", textAlign: "end" }}>
                     <label
                       htmlFor="cemeteryContact"
                       style={{ fontWeight: "bold" }}
@@ -653,7 +693,7 @@ const InvoicehtmlForm = () => {
                       style={{ fontWeight: "bold" }}
                     />
                   </td>
-                  <th>
+                  <th style={{ textAlign: "start" }}>
                     <label htmlFor="phone" style={{ fontWeight: "bold" }}>
                       Phone:
                     </label>
@@ -662,7 +702,7 @@ const InvoicehtmlForm = () => {
                     <input
                       type="text"
                       id="phone"
-                      name="Cemeteryphone"
+                      name="cemeteryPhone"
                       onChange={handleInputChange}
                       value={formData.cemeteryPhone}
                       readOnly={localStorage.getItem("role") === "viewer"}
@@ -672,7 +712,7 @@ const InvoicehtmlForm = () => {
                   </td>
                 </tr>
                 <tr className="input-row">
-                  <th>
+                  {/* <th>
                     <label htmlFor="zone" style={{ fontWeight: "bold" }}>
                       Zone:
                     </label>
@@ -688,8 +728,13 @@ const InvoicehtmlForm = () => {
                       onKeyPress={handleKeyPress}
                       style={{ fontWeight: "bold" }}
                     />
-                  </td>
-                  <th>
+                  </td> */}
+                  <th
+                    style={{
+                      width: "100px",
+                      // textAlign: "end",
+                    }}
+                  >
                     <label htmlFor="lotOwner" style={{ fontWeight: "bold" }}>
                       Lot Owner:
                     </label>
@@ -704,12 +749,29 @@ const InvoicehtmlForm = () => {
                       readOnly={localStorage.getItem("role") === "viewer"}
                       onKeyPress={handleKeyPress}
                       placeholder="Enter Lot"
-                      style={{ fontWeight: "bold" }}
+                      style={{ fontWeight: "bold", width: "180px" }}
                     />
                   </td>
                   <th>
+                    <label htmlFor="section" style={{ fontWeight: "bold" }}>
+                      Section:
+                    </label>
+                  </th>
+                  <td>
+                    <input
+                      type="text"
+                      id="section"
+                      name="section"
+                      value={formData.section}
+                      onChange={handleInputChange}
+                      onKeyPress={handleKeyPress}
+                      readOnly={localStorage.getItem("role") === "viewer"}
+                      style={{ fontWeight: "bold", width: "100px" }}
+                    />
+                  </td>
+                  <th style={{ textAlign: "end" }}>
                     <label htmlFor="lotNumber" style={{ fontWeight: "bold" }}>
-                      Lot Number:
+                      Lot:
                     </label>
                   </th>
                   <td>
@@ -721,7 +783,24 @@ const InvoicehtmlForm = () => {
                       onChange={handleInputChange}
                       onKeyPress={handleKeyPress}
                       readOnly={localStorage.getItem("role") === "viewer"}
-                      placeholder="Enter lot number"
+                      // placeholder="Enter lot number"
+                      style={{ fontWeight: "bold" }}
+                    />
+                  </td>
+                  <th style={{ textAlign: "start" }}>
+                    <label htmlFor="space" style={{ fontWeight: "bold" }}>
+                      Space:
+                    </label>
+                  </th>
+                  <td>
+                    <input
+                      type="text"
+                      id="space"
+                      name="space"
+                      value={formData.space}
+                      onChange={handleInputChange}
+                      onKeyPress={handleKeyPress}
+                      readOnly={localStorage.getItem("role") === "viewer"}
                       style={{ fontWeight: "bold" }}
                     />
                   </td>

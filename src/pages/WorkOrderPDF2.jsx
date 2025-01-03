@@ -3,58 +3,25 @@ import modelDetails from "../utils/model_details.json";
 import styled from "styled-components";
 
 export default function WorkOrderPDF() {
-  const [data, setData] = useState({
-    headStoneName: "",
-    invoiceNo: "",
-    username: "",
-    date: "",
-    customerEmail: "",
-    customerName: "",
-    customerPhone: "",
-    cemeteryName: "",
-    cemeteryAddress: "",
-    cemeteryContact: "",
-    lotNumber: "",
-    details: "",
-    model1: "",
-    selectModelImage1: "",
-    modelColor1: "",
-    customColor1: "",
-    model2: "",
-    selectModelImage2: "",
-    modelColor2: "",
-    customColor2: "",
-    model3: "",
-    selectModelImage3: "",
-    modelColor3: "",
-    customColor3: "",
-    model4: "",
-    modelColor4: "",
-    customColor4: "",
-    model5: "",
-    modelColor5: "",
-    customColor5: "",
-    designApproved: "false",
-    applicationSubmitted: "false",
-    applicationApproved: "false",
-    stoneOrdered: "false",
-    stoneReceived: "false",
-    foundationCheck: "false",
-    engraved: "false",
-    balancePaid: "false",
-    set: "false",
-    art: [],
-  });
+  const [data, setData] = useState(null);
+  const [art, setArt] = useState(null);
   const [workOrderData, setWorkOrderData] = useState([]);
 
   // Fetch data from local storage and JSON file on component mount
   useEffect(() => {
     const storedData = localStorage.getItem("invoiceData");
+    const artData = localStorage.getItem("artImage");
     console.log("Stored Data:", JSON.parse(storedData));
+    console.log("Art Data:", artData);
     if (storedData) {
       setData(JSON.parse(storedData));
     }
+    if (artData && artData !== "undefined") {
+      setArt(JSON.parse(artData));
+    }
     loadWorkOrderData();
+    localStorage.removeItem("invoiceData");
+    localStorage.removeItem("artImage");
   }, []);
 
   const loadWorkOrderData = () => {
@@ -79,8 +46,12 @@ export default function WorkOrderPDF() {
             }}
           >
             <SectionTitle>Headstone Name: </SectionTitle>
-            <h1 style={{ paddingLeft: "4em" }}>
-              {data ? data.headStoneName : "Loading..."}
+            <h1
+              style={{
+                paddingLeft: "4em",
+              }}
+            >
+              {data?.headstoneName}
             </h1>
           </Header>
           <Header>
@@ -219,7 +190,7 @@ export default function WorkOrderPDF() {
               marginRight: "auto",
             }}
           >
-            {data?.headStoneName &&
+            {data &&
               [
                 {
                   id: "designApproved",
@@ -614,9 +585,7 @@ export default function WorkOrderPDF() {
                     width: "100%",
                   }}
                 >
-                  {data?.art?.[0]?.base64Data && (
-                    <Thumbnail src={data?.art?.[0]?.base64Data} alt={`Art`} />
-                  )}
+                  {art && <Thumbnail src={art} alt={`Art`} />}
                 </div>
               </div>
             </div>

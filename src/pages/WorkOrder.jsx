@@ -7,6 +7,7 @@ import "slick-carousel/slick/slick-theme.css";
 import styled from "styled-components";
 import { useLocation } from "react-router-dom";
 import IconWithText from "../components/IconWithTExt";
+import * as htmlToImage from "html-to-image";
 import IconHome from "../assets/icons/home.png";
 import IconSave from "../assets/icons/diskette.png";
 import IconPrint from "../assets/icons/printing.png";
@@ -16,9 +17,15 @@ import InstallationForm from "../components/InstallationForm";
 import html2canvas from "html2canvas";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import jsPDF from "jspdf";
 import { generateGoogleMapsLink } from "../utils/get_maps_url";
+import WorkOrderPDF from "./WorkOrderPDF";
+import Art from "../components/Art";
 
 const WorkOrder = () => {
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showPDF, setShowPDF] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
@@ -70,21 +77,33 @@ const WorkOrder = () => {
     model5: "",
     modelColor5: "",
     customColor5: "",
+    designApproved: "false",
+    applicationSubmitted: "false",
+    applicationApproved: "false",
+    stoneOrdered: "false",
+    stoneReceived: "false",
+    foundationCheck: "false",
+    engraved: "false",
+    balancePaid: "false",
+    set: "false",
     cemeterySubmission: [],
     engravingSubmission: [],
     foundationInstall: [],
     monumentSetting: [],
     cemeteryApproval: [],
     finalArt: [],
+    art: [],
   });
 
   const artComponentRef = useRef();
   const engravingArtRef = useRef();
+  const artRef = useRef();
   const installationFormRef = useRef();
 
   const triggerActionInChild = () => {
     // artComponentRef.current.submitToArt();
     engravingArtRef.current.submitToEngraving();
+    artRef.current.submitArt();
     installationFormRef.current.submitToFoundation();
     // submitToCemetery();
     setSubmissionSuccess(true);
@@ -104,6 +123,34 @@ const WorkOrder = () => {
     if (location.state) {
       console.log(location.state);
       setFormData(location.state);
+
+      // Convert specific formData fields from string to boolean
+      const fieldsToConvert = [
+        "designApproved",
+        "applicationSubmitted",
+        "applicationApproved",
+        "stoneOrdered",
+        "stoneReceived",
+        "foundationCheck",
+        "engraved",
+        "balancePaid",
+        "set",
+      ];
+
+      setFormData((prevData) => {
+        let updatedData = { ...prevData };
+
+        fieldsToConvert.forEach((field) => {
+          if (updatedData[field] === "true") {
+            updatedData[field] = true;
+          } else if (updatedData[field] === "false") {
+            updatedData[field] = false;
+          }
+        });
+
+        return updatedData;
+      });
+
       if (location.state?.cemeteryName === "Other") {
         setFormData((prevData) => ({
           ...prevData,
@@ -111,6 +158,7 @@ const WorkOrder = () => {
           username: localStorage.getItem("username"),
         }));
       }
+
       // Set uploaded images to cemeterySubmission
       if (location.state.cemeterySubmission) {
         const sortedCemeterySubmission = location.state.cemeterySubmission.sort(
@@ -158,8 +206,30 @@ const WorkOrder = () => {
   //   window.print();
   // };
 
+  const handleArtSubmissionSuccess = (submittedImages) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      art: [...(prevData.art || []), ...submittedImages], // Add submitted images
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const {
+      cemeterySubmission,
+      engravingSubmission,
+      foundationInstall,
+      monumentSetting,
+      cemeteryApproval,
+      finalArt,
+      ...formDataToStore
+    } = formData;
+
+    // Now formDataToStore doesn't contain the excluded fields
+
+    localStorage.setItem("invoiceData", JSON.stringify(formDataToStore));
+
+    setShowPDF(true);
     try {
       setSavingOrder(true);
       // Hide the input elements before capturing the screenshot
@@ -176,6 +246,29 @@ const WorkOrder = () => {
         input.style.display = "block";
       });
 
+      const pdf2 = new jsPDF({
+        unit: "mm",
+        format: "letter",
+      });
+
+      const element2 = document.getElementById("work-order-pdf");
+      if (!element2) {
+        console.error("Element with ID 'work-order-pdf' does not exist.");
+        return;
+      }
+      const imageDataUrl2 = await htmlToImage.toPng(element2);
+
+      const img2 = new Image();
+      img2.src = imageDataUrl2;
+
+      await new Promise((resolve) => {
+        img2.onload = resolve;
+      });
+
+      pdf2.addImage(img2, "PNG", 0, 0, 215.9, 279.4);
+
+      const pdfBlob2 = pdf2.output("blob");
+
       // Convert the captured canvas to a Blob
       canvas.toBlob(async (blob) => {
         // Create a FormData object to send data to the server
@@ -185,6 +278,8 @@ const WorkOrder = () => {
           blob,
           `${formData.headStoneName}..${formData.invoiceNo}.png`
         );
+
+        formDataToSend.append("pdf2", pdfBlob2, "work-order.pdf");
         // Append each field of formData to finalFormData
         for (const key in formData) {
           if (formData.hasOwnProperty(key)) {
@@ -235,6 +330,8 @@ const WorkOrder = () => {
 
         if (response.ok) {
           console.log("Work order submission successful!");
+          setShowPDF(false);
+          localStorage.removeItem("invoiceData");
           setWorkOrderSaved(true);
           // Optionally, you can redirect or show a success message here
         } else {
@@ -303,6 +400,42 @@ const WorkOrder = () => {
 
   const closeModal = () => {
     setWorkOrderSaved(false);
+  };
+
+  const sendMail = async () => {
+    const email = formData?.customerEmail;
+    const headStoneName = formData?.headStoneName;
+    const invoiceNo = formData?.invoiceNo;
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/send-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "69420",
+          },
+          body: JSON.stringify({ email, headStoneName, invoiceNo }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data.message);
+        setWorkOrderSaved(false);
+        setShowSuccessModal(true);
+      } else {
+        const errorData = await response.json();
+        console.error("Error:", errorData.message);
+        setWorkOrderSaved(false);
+        setShowErrorModal(true);
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      setWorkOrderSaved(false);
+      setShowErrorModal(true);
+    }
   };
 
   const handleThumbnailClick = (image) => {
@@ -419,6 +552,107 @@ const WorkOrder = () => {
             </Detail>
           </CustomerDetails>
         </Header>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "start",
+            padding: "15px",
+            paddingRight: "20px",
+            backgroundColor: "#87CEEB",
+            gap: "25px",
+            marginTop: "20px",
+            borderRadius: "10px",
+            width: "100%",
+            marginLeft: "auto",
+            marginRight: "auto",
+            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          {[
+            {
+              id: "designApproved",
+              label: "Design Approved",
+              key: "designApproved",
+            },
+            {
+              id: "applicationSubmitted",
+              label: "Application Submitted",
+              key: "applicationSubmitted",
+            },
+            {
+              id: "applicationApproved",
+              label: "Application Approved",
+              key: "applicationApproved",
+            },
+            { id: "stoneOrdered", label: "Stone Ordered", key: "stoneOrdered" },
+            {
+              id: "stoneReceived",
+              label: "Stone Received",
+              key: "stoneReceived",
+            },
+            {
+              id: "foundationCheck",
+              label: "Foundation",
+              key: "foundationCheck",
+            },
+            { id: "engraved", label: "Engraved", key: "engraved" },
+            { id: "balancePaid", label: "Balance Paid", key: "balancePaid" },
+            { id: "set", label: "Set", key: "set" },
+          ].map(({ id, label, key }) => (
+            <div
+              key={id}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+              }}
+            >
+              <input
+                type="checkbox"
+                id={id}
+                style={{ width: "16px", height: "16px" }}
+                checked={formData[key]} // Bind to state
+                onChange={() =>
+                  setFormData({ ...formData, [key]: !formData[key] })
+                } // Toggle the value in formData
+              />
+              <label
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  marginTop: "5px",
+                }}
+                htmlFor={id}
+              >
+                {label}
+              </label>
+            </div>
+          ))}
+        </div>
+
+        <Art
+          headStoneName={formData.headStoneName}
+          invoiceNo={formData.invoiceNo}
+          oldArtImages={location.state?.art || []}
+          ref={artRef}
+          onArtSubmissionSuccess={handleArtSubmissionSuccess}
+        />
+
+        {localStorage.getItem("role") !== "viewer" ? (
+          <SubmitButton
+            type="button"
+            onClick={triggerActionInChild}
+            style={{
+              marginLeft: "1rem",
+              marginTop: "1rem",
+            }}
+          >
+            {submissionSuccess ? "Submitted" : "Submit to Upload"}
+          </SubmitButton>
+        ) : null}
+
         <CustomerDesign>
           <SectionTitle>Customer Design Approval</SectionTitle>
           <DesignForm>
@@ -500,19 +734,6 @@ const WorkOrder = () => {
             ) : null} */}
           </DesignForm>
         </CustomerDesign>
-        <ArtComponent
-          headStoneName={formData.headStoneName}
-          invoiceNo={formData.invoiceNo}
-          finalArt={location.state?.finalArt || []}
-          cemeteryApproval={location.state?.cemeteryApproval || []}
-          ref={artComponentRef}
-        />
-        <EngravingArt
-          headStoneName={formData.headStoneName}
-          invoiceNo={formData.invoiceNo}
-          oldEngravingImage={location.state?.engravingSubmission || []}
-          ref={engravingArtRef}
-        />
 
         <ModelInfo>
           <SectionTitle>Models Information</SectionTitle>
@@ -1117,6 +1338,20 @@ const WorkOrder = () => {
           </div>
         </Requests>
 
+        <ArtComponent
+          headStoneName={formData.headStoneName}
+          invoiceNo={formData.invoiceNo}
+          finalArt={location.state?.finalArt || []}
+          cemeteryApproval={location.state?.cemeteryApproval || []}
+          ref={artComponentRef}
+        />
+        <EngravingArt
+          headStoneName={formData.headStoneName}
+          invoiceNo={formData.invoiceNo}
+          oldEngravingImage={location.state?.engravingSubmission || []}
+          ref={engravingArtRef}
+        />
+
         <CemeteryInfo>
           <SectionTitle>Cemetery Information</SectionTitle>
           <CemeteryDetail>
@@ -1150,27 +1385,46 @@ const WorkOrder = () => {
             ref={installationFormRef}
           />
         </CemeteryInfo>
-        {localStorage.getItem("role") !== "viewer" ? (
-          <SubmitButton
-            type="button"
-            onClick={triggerActionInChild}
-            style={{
-              marginLeft: "1rem",
-              marginBottom: "2rem",
-            }}
-          >
-            {submissionSuccess ? "Submitted" : "Submit to Upload"}
-          </SubmitButton>
-        ) : null}
       </div>
       {workOrderSaved && (
         <SuccessModal>
           <SuccessModalContent>
             <h2>Work Order Saved Successfully</h2>
-            <button onClick={closeModal}>Close</button>
+            <button
+              style={{ backgroundColor: "green", marginRight: "2rem" }}
+              onClick={sendMail}
+            >
+              Send Mail
+            </button>
+            <button onClick={closeModal}>Cancel</button>
           </SuccessModalContent>
         </SuccessModal>
       )}
+
+      {showSuccessModal && (
+        <SuccessModal>
+          <SuccessModalContent>
+            <h2>Email sent successfully!</h2>
+            <button onClick={() => setShowSuccessModal(false)}>Cancel</button>
+          </SuccessModalContent>
+        </SuccessModal>
+      )}
+      {showErrorModal && (
+        <SuccessModal>
+          <SuccessModalContent>
+            <h2>Failed to send email. Please try again.</h2>
+            <button
+              style={{ backgroundColor: "green", marginRight: "2rem" }}
+              onClick={sendMail}
+            >
+              Send Mail
+            </button>
+            <button onClick={() => setShowErrorModal(false)}>Cancel</button>
+          </SuccessModalContent>
+        </SuccessModal>
+      )}
+
+      {showPDF && <WorkOrderPDF />}
     </Container>
   );
 };

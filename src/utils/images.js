@@ -413,13 +413,12 @@ const images = [
     title: "legacy23",
     type: "legacy",
   },
-
-  {
-    id: 109,
-    src: require("../assets/images/models/markers/Ledger_30x60x4.png"),
-    title: "ledger_30x60x4",
-    type: "markers",
-  },
+  // {
+  //   id: 109,
+  //   src: require("../assets/images/models/markers/Ledger_30x60x4.png"),
+  //   title: "ledger_30x60x4",
+  //   type: "markers",
+  // },
   {
     id: 110,
     src: require("../assets/images/models/markers/Ledger_32x60x4.png"),

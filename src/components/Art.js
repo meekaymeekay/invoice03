@@ -5,6 +5,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 import styled from "styled-components";
+import { FaTrashAlt } from "react-icons/fa";
 
 const Art = forwardRef(
   ({ headStoneName, invoiceNo, oldArtImages, onArtSubmissionSuccess }, ref) => {
@@ -45,10 +46,10 @@ const Art = forwardRef(
     useImperativeHandle(ref, () => ({
       submitArt: async () => {
         try {
-          if (artImagesBase64.length === 0) {
-            console.error("No art images have been selected.");
-            return;
-          }
+          // if (artImagesBase64.length === 0) {
+          //   console.error("No art images have been selected.");
+          //   return;
+          // }
 
           const formDataToSend = new FormData();
           formDataToSend.append("headstoneName", headStoneName);
@@ -126,7 +127,17 @@ const Art = forwardRef(
 
           <div style={{ padding: "1rem" }}>
             {artImagesBase64.map((base64Image, index) => (
-              <div key={index} className="thumbnail-container">
+              <div
+                style={{ position: "relative" }}
+                key={index}
+                className="thumbnail-container"
+              >
+                {localStorage.getItem("role") !== "viewer" ? (
+                  <DeleteButton onClick={() => removeArtImage(index)}>
+                    <FaTrashAlt size={24} color="red" />
+                  </DeleteButton>
+                ) : null}
+
                 <div
                   style={{
                     display: "flex",
@@ -241,4 +252,12 @@ const ModifiedDate = styled.div`
   margin-top: 0.5rem;
   color: gray;
   text-align: center;
+`;
+
+const DeleteButton = styled.span`
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+  z-index: 10;
 `;

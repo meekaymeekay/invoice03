@@ -209,7 +209,7 @@ const WorkOrder = () => {
   const handleArtSubmissionSuccess = (submittedImages) => {
     setFormData((prevData) => ({
       ...prevData,
-      art: [...(prevData.art || []), ...submittedImages], // Add submitted images
+      art: submittedImages,
     }));
   };
 
@@ -404,6 +404,7 @@ const WorkOrder = () => {
 
   const sendMail = async () => {
     const email = formData?.customerEmail;
+    const name = formData?.customerName;
     const headStoneName = formData?.headStoneName;
     const invoiceNo = formData?.invoiceNo;
 
@@ -416,7 +417,7 @@ const WorkOrder = () => {
             "Content-Type": "application/json",
             "ngrok-skip-browser-warning": "69420",
           },
-          body: JSON.stringify({ email, headStoneName, invoiceNo }),
+          body: JSON.stringify({ email, name, headStoneName, invoiceNo }),
         }
       );
 

@@ -55,6 +55,7 @@ export default function WorkOrderPDF() {
       setData(JSON.parse(storedData));
     }
     loadWorkOrderData();
+    localStorage.removeItem("invoiceData");
   }, []);
 
   const loadWorkOrderData = () => {

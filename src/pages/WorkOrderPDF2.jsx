@@ -578,10 +578,8 @@ export default function WorkOrderPDF() {
                 <SectionTitle>Art</SectionTitle>
                 <div
                   style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "100%",
+                    position: "relative",
+                    height: "calc(100% - 40px)", // Subtract space for title
                     width: "100%",
                   }}
                 >
@@ -1526,7 +1524,10 @@ const ModelInfo = styled.div`
 `;
 
 const Thumbnail = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 `;

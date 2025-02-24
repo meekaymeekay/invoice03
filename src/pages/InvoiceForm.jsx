@@ -6,10 +6,7 @@ import IconHome from "../assets/icons/home.png";
 import IconSave from "../assets/icons/diskette.png";
 import BrandingSection from "../components/BrandingSection";
 import HorizontalRule from "../components/HorizontalRule";
-import {
-  cemeteryNames,
-  getCemeteryDataByName,
-} from "../utils/cemeteryFunctions";
+import { fetchCemeteryData, getCemeteryDataByName } from "../utils/cemeteries";
 import ImageModal from "../components/ImageModal";
 import colorOptions from "../utils/colorOptions";
 import SuccessModal from "../components/SuccessModal";
@@ -19,6 +16,8 @@ import * as htmlToImage from "html-to-image";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import WorkOrderPDF from "./WorkOrderPDF2";
+import TaxConfig from "../components/TaxConfig";
+import EndNoteConfig from "../components/EndNoteConfig";
 
 const InvoicehtmlForm = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -29,6 +28,10 @@ const InvoicehtmlForm = () => {
   const [selectedCemetery, setSelectedCemetery] = useState("");
   const [customCemetery, setCustomCemetery] = useState("");
   const [showPDF, setShowPDF] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [cemeteryNames, setCemeteryNames] = useState([]);
+  const [taxPercentage, setTaxPercentage] = useState(8.25);
+  const [endNoteContent, setEndNoteContent] = useState("");
 
   const location = useLocation();
 
@@ -40,6 +43,70 @@ const InvoicehtmlForm = () => {
       navigate("/");
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const loadCemeteryData = async () => {
+      const data = await fetchCemeteryData();
+      setCemeteryNames(data.map((cemetery) => cemetery.CEMETERY_NAME));
+    };
+    loadCemeteryData();
+  }, []);
+
+  useEffect(() => {
+    const fetchTaxPercentage = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/tax-config`,
+          {
+            headers: {
+              "ngrok-skip-browser-warning": "69420",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch tax percentage");
+        }
+
+        const data = await response.json();
+        setTaxPercentage(data.taxPercentage);
+      } catch (error) {
+        console.error("Error fetching tax percentage:", error);
+      }
+    };
+
+    fetchTaxPercentage();
+  }, []);
+
+  useEffect(() => {
+    const fetchEndNote = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/end-note-config`,
+          {
+            headers: {
+              "ngrok-skip-browser-warning": "69420",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch end note");
+        }
+
+        const data = await response.json();
+        setEndNoteContent(data.content);
+      } catch (error) {
+        console.error("Error fetching end note:", error);
+        // Set default content if fetch fails
+        setEndNoteContent(
+          "<p><strong>All sales are final. No refunds or exchanges. A 3% fee will be added to all credit card transactions. A $35.00 fee will be charged for all returned checks. A 1.5% monthly storage fee will be charged on all merchandise left in storage over 90 days from invoice date. This storage fee will be added to the balance of the invoice. Customer is responsible for all storage fee.</strong></p>"
+        );
+      }
+    };
+
+    fetchEndNote();
+  }, []);
 
   const handleOpenModal = (index) => {
     setModalIsOpen(true);
@@ -89,16 +156,16 @@ const InvoicehtmlForm = () => {
   };
 
   const generateInvoiceNumber = () => {
-    const timestamp = new Date().getTime().toString();
-    let randomDigits = "";
+    // Get current timestamp in milliseconds
+    const timestamp = Date.now();
 
-    // Generate 5 random indices within the timestamp length
-    for (let i = 0; i < 5; i++) {
-      const randomIndex = Math.floor(Math.random() * timestamp.length);
-      randomDigits += timestamp.charAt(randomIndex);
-    }
+    // Generate 3 random digits
+    const randomNum = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0");
 
-    return `INV-${randomDigits}`;
+    // Format: INV-TIMESTAMP-RRR (where TIMESTAMP is full timestamp, RRR is 3 random digits)
+    return `INV-${timestamp}${randomNum}`;
   };
 
   useEffect(() => {
@@ -312,19 +379,20 @@ const InvoicehtmlForm = () => {
       totalBeforeTax += foundation;
     }
 
-    const taxPercentage = 8.25; // Fixed tax percentage
-    const tax = (subTotal * (taxPercentage / 100)).toFixed(2);
-    updatedFormData.tax = tax;
+    const taxAmount = (subTotal * (taxPercentage / 100)).toFixed(2);
+    updatedFormData.tax = taxAmount;
 
     // Apply the discount amount
     if (!isNaN(discountAmount) && discountAmount > 0) {
       updatedFormData.total = (
         totalBeforeTax -
         discountAmount +
-        parseFloat(tax)
+        parseFloat(taxAmount)
       ).toFixed(2);
     } else {
-      updatedFormData.total = (totalBeforeTax + parseFloat(tax)).toFixed(2);
+      updatedFormData.total = (totalBeforeTax + parseFloat(taxAmount)).toFixed(
+        2
+      );
     }
 
     setFormData(updatedFormData);
@@ -500,6 +568,9 @@ const InvoicehtmlForm = () => {
         console.error("Failed to fetch work order data:", response.statusText);
       }
 
+      // Set isGeneratingPDF to true before PDF generation
+      setIsGeneratingPDF(true);
+
       // Save form data locally
       localStorage.setItem("invoiceData", JSON.stringify(formData));
       setShowPDF(true);
@@ -519,9 +590,12 @@ const InvoicehtmlForm = () => {
       // Capture the form snapshot as a PDF
       setTimeout(async () => {
         await captureFormSnapshot();
+        // Reset isGeneratingPDF after PDF generation
+        setIsGeneratingPDF(false);
       }, 1000);
     } catch (error) {
       console.error("API Error:", error);
+      setIsGeneratingPDF(false);
     }
   };
 
@@ -529,6 +603,20 @@ const InvoicehtmlForm = () => {
     if (e.key === "Enter") {
       e.preventDefault();
     }
+  };
+
+  const handleRemoveModel = (modelIndex) => {
+    setFormData((prevData) => {
+      const updatedData = { ...prevData };
+      // Reset all related fields for the specified model
+      updatedData[`model${modelIndex}`] = "";
+      updatedData[`selectModelImage${modelIndex}`] = "";
+      updatedData[`modelColor${modelIndex}`] = "";
+      updatedData[`customColor${modelIndex}`] = "";
+      updatedData[`modelQty${modelIndex}`] = "";
+      updatedData[`modelPrice${modelIndex}`] = "";
+      return updatedData;
+    });
   };
 
   return (
@@ -873,11 +961,36 @@ const InvoicehtmlForm = () => {
               </div>
               {formData.model1 !== "" && (
                 <div className="selected-image">
-                  <img
-                    src={formData.model1}
-                    style={{ width: "100px", height: "70px" }}
-                    alt="Selected Model"
-                  />
+                  <div style={{ position: "relative" }}>
+                    <img
+                      src={formData.model1}
+                      style={{ width: "100px", height: "70px" }}
+                      alt="Selected Model"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveModel(1)}
+                      style={{
+                        position: "absolute",
+                        top: -10,
+                        right: -10,
+                        background: "red",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "50%",
+                        width: "20px",
+                        height: "20px",
+                        cursor: "pointer",
+                        display:
+                          localStorage.getItem("role") === "viewer" ||
+                          isGeneratingPDF
+                            ? "none"
+                            : "block",
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
                   <p style={{ textAlign: "center", fontWeight: "bold" }}>
                     {formData.selectModelImage1}
                   </p>
@@ -976,11 +1089,36 @@ const InvoicehtmlForm = () => {
               </div>
               {formData.model2 !== "" && (
                 <div className="selected-image">
-                  <img
-                    src={formData.model2}
-                    style={{ width: "100px", height: "70px" }}
-                    alt="Selected Model"
-                  />
+                  <div style={{ position: "relative" }}>
+                    <img
+                      src={formData.model2}
+                      style={{ width: "100px", height: "70px" }}
+                      alt="Selected Model"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveModel(2)}
+                      style={{
+                        position: "absolute",
+                        top: -10,
+                        right: -10,
+                        background: "red",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "50%",
+                        width: "20px",
+                        height: "20px",
+                        cursor: "pointer",
+                        display:
+                          localStorage.getItem("role") === "viewer" ||
+                          isGeneratingPDF
+                            ? "none"
+                            : "block",
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
                   <p style={{ textAlign: "center", fontWeight: "bold" }}>
                     {formData.selectModelImage2}
                   </p>
@@ -1379,39 +1517,7 @@ const InvoicehtmlForm = () => {
                   ></textarea>
                 </div>
                 <div className="end-note">
-                  <p>
-                    Make all checks payable to Headstone World Houston.
-                    <br />
-                    <strong>
-                      Customers are responsible for any cemetery fees.
-                    </strong>
-                    <br />
-                    All purchases are not eligible for refunds or exchanges.
-                    <br />
-                    <br />
-                    <strong>
-                      Headstone World is not responsible for errors that appear
-                      <br />
-                      in signed and approved orders.
-                    </strong>
-                    <br />
-                    <br />
-                    Clarity of lasered images is not guaranteed for unapproved
-                    <br />
-                    resolutions of source images.
-                    <br /> <br />
-                    Headstone World is subject to shipping delays; time
-                    estimates
-                    <br />
-                    are subject to change.
-                    <br />
-                    <br />
-                    <strong>
-                      Completed orders left for over 30 days are subject to a{" "}
-                      <br />
-                      storage fee.
-                    </strong>
-                  </p>
+                  <div dangerouslySetInnerHTML={{ __html: endNoteContent }} />
                 </div>
               </div>
               <div className="right-section">
@@ -1438,7 +1544,7 @@ const InvoicehtmlForm = () => {
                       name="tax"
                       value={formData.tax}
                       onChange={handleInputChange}
-                      placeholder="8.25% of total"
+                      placeholder={`${taxPercentage}% of total`}
                       readOnly
                       style={{ fontWeight: "bold" }}
                     />
@@ -1651,6 +1757,20 @@ const InvoicehtmlForm = () => {
         modelColor4={formData?.modelColor4}
         model5={formData?.model5}
         modelColor5={formData?.modelColor5}
+      />
+      <TaxConfig
+        currentTaxPercentage={taxPercentage}
+        onTaxUpdate={(newTaxPercentage) => {
+          setTaxPercentage(newTaxPercentage);
+          // Recalculate tax with new percentage
+          handleInputChange({
+            target: { name: "subTotal", value: formData.subTotal },
+          });
+        }}
+      />
+      <EndNoteConfig
+        currentContent={endNoteContent}
+        onContentUpdate={setEndNoteContent}
       />
       {showPDF && <WorkOrderPDF />}
     </Container>

@@ -10,7 +10,6 @@ import IconWithText from "../components/IconWithTExt";
 import * as htmlToImage from "html-to-image";
 import IconHome from "../assets/icons/home.png";
 import IconSave from "../assets/icons/diskette.png";
-import IconPrint from "../assets/icons/printing.png";
 import ArtComponent from "../components/ArtComponent";
 import EngravingArt from "../components/EngravingArt";
 import InstallationForm from "../components/InstallationForm";
@@ -99,6 +98,8 @@ const WorkOrder = () => {
   const engravingArtRef = useRef();
   const artRef = useRef();
   const installationFormRef = useRef();
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const triggerActionInChild = () => {
     // artComponentRef.current.submitToArt();
@@ -403,10 +404,12 @@ const WorkOrder = () => {
   };
 
   const sendMail = async () => {
+    setIsLoading(true);
     const email = formData?.customerEmail;
     const name = formData?.customerName;
     const headStoneName = formData?.headStoneName;
     const invoiceNo = formData?.invoiceNo;
+    const invoiceDate = formData?.date;
 
     try {
       const response = await fetch(
@@ -417,7 +420,13 @@ const WorkOrder = () => {
             "Content-Type": "application/json",
             "ngrok-skip-browser-warning": "69420",
           },
-          body: JSON.stringify({ email, name, headStoneName, invoiceNo }),
+          body: JSON.stringify({
+            email,
+            name,
+            headStoneName,
+            invoiceNo,
+            invoiceDate,
+          }),
         }
       );
 
@@ -436,6 +445,8 @@ const WorkOrder = () => {
       console.error("Error sending email:", error);
       setWorkOrderSaved(false);
       setShowErrorModal(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -636,6 +647,7 @@ const WorkOrder = () => {
         <Art
           headStoneName={formData.headStoneName}
           invoiceNo={formData.invoiceNo}
+          invoiceDate={formData.date}
           oldArtImages={location.state?.art || []}
           ref={artRef}
           onArtSubmissionSuccess={handleArtSubmissionSuccess}
@@ -1394,8 +1406,9 @@ const WorkOrder = () => {
             <button
               style={{ backgroundColor: "green", marginRight: "2rem" }}
               onClick={sendMail}
+              disabled={isLoading}
             >
-              Send Mail
+              {isLoading ? "Sending..." : "Send Mail"}
             </button>
             <button onClick={closeModal}>Cancel</button>
           </SuccessModalContent>
@@ -1417,8 +1430,9 @@ const WorkOrder = () => {
             <button
               style={{ backgroundColor: "green", marginRight: "2rem" }}
               onClick={sendMail}
+              disabled={isLoading}
             >
-              Send Mail
+              {isLoading ? "Loading..." : "Send Mail"}
             </button>
             <button onClick={() => setShowErrorModal(false)}>Cancel</button>
           </SuccessModalContent>

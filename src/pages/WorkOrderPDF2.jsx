@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import modelDetails from "../utils/model_details.json";
+import { fetchModelDetails } from "../utils/modelDetailsService";
 import styled from "styled-components";
 
 export default function WorkOrderPDF() {
@@ -24,8 +24,9 @@ export default function WorkOrderPDF() {
     localStorage.removeItem("artImage");
   }, []);
 
-  const loadWorkOrderData = () => {
+  const loadWorkOrderData = async () => {
     try {
+      const modelDetails = await fetchModelDetails();
       setWorkOrderData(modelDetails);
     } catch (error) {
       console.error("Failed to load work order data", error);

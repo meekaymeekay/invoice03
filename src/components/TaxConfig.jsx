@@ -72,6 +72,7 @@ const Container = styled.div`
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  background-color:  #E7E9EB;
 
   p {
     margin-bottom: 5px;

@@ -192,18 +192,11 @@ const ImageModal = ({ isOpen, closeModal, handleImageSelect, modalIndex }) => {
         <div className="image-gallery">
           {images.map((image, index) => (
             <div key={index} className="image-container">
-              <img
-                src={`${process.env.REACT_APP_API_URL}${image.src}`}
-                alt={`Model ${index + 1}`}
-              />
+              <img src={image.src} alt={`Model ${index + 1}`} />
               <p>{image.title}</p>
               <button
                 onClick={() =>
-                  handleImageSelect(
-                    `${process.env.REACT_APP_API_URL}${image.src}`,
-                    image.title,
-                    modalIndex
-                  )
+                  handleImageSelect(image.src, image.title, modalIndex)
                 }
               >
                 Select

@@ -10,6 +10,7 @@ import searchImage from "../assets/images/search.png";
 import reportImage from "../assets/images/report.png";
 import searchInvoice from "../assets/images/pngwing.com.png";
 import { useAuth } from "../context/AuthContext";
+import { Header } from "../components/SearchStyles";
 
 const LandingPage = () => {
   const { isAuthenticated } = useAuth();
@@ -21,127 +22,160 @@ const LandingPage = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const headerStyle = {
-    backgroundColor: "#f5f5f5",
-    borderBottom: "2px solid black",
-    padding: "10px 0",
-    textAlign: "center",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-  };
-
   return (
-    <>
-      <NavBar className="nav-bar">
-        <h1>Headstone World</h1>
-        <h3>
-          Logged in as:{" "}
-          {localStorage.getItem("role") === "admin"
-            ? "Admin"
-            : localStorage.getItem("role") === "adminWO"
-            ? "Admin Work Order"
-            : localStorage.getItem("role") === "viewer"
-            ? "Viewer"
-            : localStorage.getItem("role")}
-        </h3>
-        <StyledLink to="/">
-          <IconWithText
-            onClick={() => {
-              localStorage.removeItem("role");
-              localStorage.removeItem("username");
-            }}
-            iconSrc={Logout}
-            text="Logout"
-          />
+    <PageContainer>
+      <Header>
+        <LogoSection>
+          <Logo>Headstone World</Logo>
+          <UserInfo>
+            <UserRole>
+              {localStorage.getItem("role") === "admin"
+                ? "Administrator"
+                : localStorage.getItem("role") === "adminWO"
+                ? "Work Order Admin"
+                : "Viewer"}
+            </UserRole>
+            <Username>{localStorage.getItem("username")}</Username>
+          </UserInfo>
+        </LogoSection>
+        <StyledLink
+          to="/"
+          onClick={() => {
+            localStorage.removeItem("role");
+            localStorage.removeItem("username");
+          }}
+        >
+          <IconWithText iconSrc={Logout} text="Logout" />
         </StyledLink>
-      </NavBar>
-      <LandingPageContainer>
-        <Branding>
-          {/* <HeadingImage src={headingImage} alt="Headstone World" /> */}
-          <Heading>Welcome to Headstone World</Heading>
-        </Branding>
-        {localStorage.getItem("role") === "admin" ? (
-          <OptionContainer>
-            <StyledLink to="/invoice-form">
-              <Option imageSrc={invoiceImage} text="Create New Invoice" />
-            </StyledLink>
-            <StyledLink to="/search-invoice">
-              <Option imageSrc={searchInvoice} text="Search Invoice" />
-            </StyledLink>
-            <StyledLink to="/search-order">
-              <Option imageSrc={searchImage} text="Search Order" />
-            </StyledLink>
-            <StyledLink to="/report">
-              <Option imageSrc={reportImage} text="Report" />
-            </StyledLink>
-          </OptionContainer>
-        ) : localStorage.getItem("role") === "viewer" ? (
-          <OptionContainer>
-            <StyledLink to="/search-invoice">
-              <Option imageSrc={searchInvoice} text="Search Invoice" />
-            </StyledLink>
-            <StyledLink to="/search-order">
-              <Option imageSrc={searchImage} text="Search Order" />
-            </StyledLink>
-          </OptionContainer>
-        ) : (
-          <OptionContainer>
-            <StyledLink to="/search-order">
-              <Option imageSrc={searchImage} text="Search Order" />
-            </StyledLink>
-          </OptionContainer>
-        )}
-      </LandingPageContainer>
-    </>
+      </Header>
+
+      <MainContent>
+        <WelcomeSection>
+          <h1>Welcome to Headstone World</h1>
+          <p>Select an option below to get started</p>
+        </WelcomeSection>
+
+        <OptionsGrid>
+          {localStorage.getItem("role") === "admin" && (
+            <>
+              <OptionCard to="/invoice-form">
+                <OptionIcon src={invoiceImage} alt="Create Invoice" />
+                <OptionText>Create New Invoice</OptionText>
+              </OptionCard>
+              <OptionCard to="/search-invoice">
+                <OptionIcon src={searchInvoice} alt="Search Invoice" />
+                <OptionText>Search Invoice</OptionText>
+              </OptionCard>
+              <OptionCard to="/search-order">
+                <OptionIcon src={searchImage} alt="Search Order" />
+                <OptionText>Search Order</OptionText>
+              </OptionCard>
+              <OptionCard to="/report">
+                <OptionIcon src={reportImage} alt="Report" />
+                <OptionText>Generate Report</OptionText>
+              </OptionCard>
+            </>
+          )}
+          {/* Add similar conditions for other roles */}
+        </OptionsGrid>
+      </MainContent>
+    </PageContainer>
   );
 };
 
-export default LandingPage;
+const PageContainer = styled.div`
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 20px;
+`;
 
-const LandingPageContainer = styled.div`
+const LogoSection = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 95vh;
-  gap: 30px;
-  background-color: #f5f5f5; /* Appropriate background color */
+  gap: 20px;
+`;
+
+const Logo = styled.h1`
+  margin: 0;
+  color: #007bff;
 `;
 
 const StyledLink = styled(Link)`
   text-decoration: none;
-  color: #000;
+  color: inherit;
 `;
 
-const Branding = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
+const MainContent = styled.main`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 `;
-const Heading = styled.h1`
+
+const WelcomeSection = styled.div`
   text-align: center;
-`;
+  margin-bottom: 40px;
 
-const OptionContainer = styled.div`
-  display: flex;
-  gap: 20px;
-`;
+  h1 {
+    color: #2c3e50;
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
 
-const HeadingImage = styled.img`
-  width: 80px;
-  height: 80px;
-`;
-
-const NavBar = styled.nav`
-  background: #f1f1f1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px;
-  border-bottom: 2px solid black;
-  border-top: none;
-  @media (max-width: 768px) {
-    justify-content: space-between;
+  p {
+    color: #666;
+    font-size: 18px;
   }
 `;
+
+const OptionsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  padding: 20px;
+`;
+
+const OptionCard = styled(Link)`
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  text-align: center;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+`;
+
+const OptionIcon = styled.img`
+  width: 64px;
+  height: 64px;
+  margin-bottom: 15px;
+`;
+
+const OptionText = styled.h3`
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+`;
+
+const UserInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+`;
+
+const UserRole = styled.div`
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 16px;
+`;
+
+const Username = styled.div`
+  color: #666;
+  font-size: 14px;
+  margin-top: 2px;
+`;
+
+export default LandingPage;

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "react-modal";
 import styled from "styled-components";
-import images from "../utils/images";
 
 const ModalContainer = styled.div`
   display: flex;
@@ -101,31 +100,62 @@ const ModalContainer = styled.div`
 
 const ImageModal = ({ isOpen, closeModal, handleImageSelect, modalIndex }) => {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [categories, setCategories] = useState([]);
+  const [images, setImages] = useState([]);
+
+  useEffect(() => {
+    // Fetch categories when modal opens
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    // Fetch images when category changes
+    if (isOpen) {
+      fetchImages(selectedCategory);
+    }
+  }, [selectedCategory, isOpen]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/model-categories`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "69420",
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch categories");
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const fetchImages = async (category) => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/model-images?category=${category}`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "69420",
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch images");
+      const data = await response.json();
+      setImages(data);
+    } catch (error) {
+      console.error("Error fetching images:", error);
+    }
+  };
 
   const filterImagesByCategory = (category) => {
     setSelectedCategory(category);
   };
-
-  const filteredImages =
-    selectedCategory === "all"
-      ? images
-      : images.filter((image) => image.type === selectedCategory);
-
-  const categories = [
-    "all",
-    "bench",
-    "crosses",
-    "hearts",
-    "legacy",
-    "markers",
-    "plural",
-    "slanted",
-    "standard",
-    "statue",
-    "bronze",
-    "vases",
-    "ceramics",
-  ];
 
   return (
     <Modal
@@ -160,21 +190,26 @@ const ImageModal = ({ isOpen, closeModal, handleImageSelect, modalIndex }) => {
           ))}
         </div>
         <div className="image-gallery">
-          {filteredImages.map((image, index) => {
-            return (
-              <div key={index} className="image-container">
-                <img src={image.src} alt={`Model ${index + 1}`} />
-                <p>{image.title}</p>
-                <button
-                  onClick={() =>
-                    handleImageSelect(image.src, image.title, modalIndex)
-                  }
-                >
-                  Select
-                </button>
-              </div>
-            );
-          })}
+          {images.map((image, index) => (
+            <div key={index} className="image-container">
+              <img
+                src={`${process.env.REACT_APP_API_URL}${image.src}`}
+                alt={`Model ${index + 1}`}
+              />
+              <p>{image.title}</p>
+              <button
+                onClick={() =>
+                  handleImageSelect(
+                    `${process.env.REACT_APP_API_URL}${image.src}`,
+                    image.title,
+                    modalIndex
+                  )
+                }
+              >
+                Select
+              </button>
+            </div>
+          ))}
         </div>
         <button onClick={closeModal}>Close</button>
       </ModalContainer>

@@ -8,7 +8,16 @@ import styled from "styled-components";
 import { FaTrashAlt } from "react-icons/fa";
 
 const Art = forwardRef(
-  ({ headStoneName, invoiceNo, oldArtImages, onArtSubmissionSuccess }, ref) => {
+  (
+    {
+      headStoneName,
+      invoiceNo,
+      invoiceDate,
+      oldArtImages,
+      onArtSubmissionSuccess,
+    },
+    ref
+  ) => {
     const [artImagesBase64, setArtImagesBase64] = useState([]);
     const [submissionSuccess, setSubmissionSuccess] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -54,7 +63,7 @@ const Art = forwardRef(
           const formDataToSend = new FormData();
           formDataToSend.append("headstoneName", headStoneName);
           formDataToSend.append("invoiceNo", invoiceNo);
-
+          formDataToSend.append("invoiceDate", invoiceDate);
           artImagesBase64.forEach((base64Image, index) => {
             const blob = dataURLtoBlob(base64Image);
             formDataToSend.append(`artImages`, blob, `artImage${index}.png`);

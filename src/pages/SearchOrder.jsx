@@ -52,7 +52,7 @@ const SearchOrder = () => {
     }
   };
 
-  const viewWorkOrder = async (invoiceNo) => {
+  const viewWorkOrder = async (invoiceNo, year) => {
     try {
       setLoadingOrders((prevLoadingOrders) => ({
         ...prevLoadingOrders,
@@ -60,7 +60,7 @@ const SearchOrder = () => {
       }));
 
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/work-order?invoiceNo=${invoiceNo}`,
+        `${process.env.REACT_APP_API_URL}/work-order?invoiceNo=${invoiceNo}&year=${year}`,
         {
           method: "GET",
           headers: {
@@ -139,7 +139,9 @@ const SearchOrder = () => {
                 <TileInfo>Invoice No: {result.invoiceNo}</TileInfo>
                 <ButtonsContainer>
                   <ViewOrderButton
-                    onClick={() => viewWorkOrder(result.invoiceNo)}
+                    onClick={() =>
+                      viewWorkOrder(result?.invoiceNo, result?.year)
+                    }
                     disabled={loadingOrders[result.invoiceNo]}
                   >
                     {loadingOrders[result.invoiceNo]

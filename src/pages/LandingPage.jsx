@@ -9,6 +9,7 @@ import invoiceImage from "../assets/images/invoice.png";
 import searchImage from "../assets/images/search.png";
 import reportImage from "../assets/images/report.png";
 import searchInvoice from "../assets/images/pngwing.com.png";
+import trackerImage from "../assets/images/tracker.png";
 import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/SearchStyles";
 
@@ -73,6 +74,10 @@ const LandingPage = () => {
               <OptionCard to="/report">
                 <OptionIcon src={reportImage} alt="Report" />
                 <OptionText>Generate Report</OptionText>
+              </OptionCard>
+              <OptionCard to="/tracker">
+                <OptionIcon src={trackerImage} alt="Project Tracker" />
+                <OptionText>Project Tracker</OptionText>
               </OptionCard>
             </>
           )}

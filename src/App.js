@@ -7,6 +7,7 @@ import SearchInvoice from "./pages/SearchInvoice";
 import WorkOrder from "./pages/WorkOrder";
 import LoginPage from "./pages/Login";
 import Report from "./pages/Report";
+import Tracker from "./pages/Tracker";
 import { AuthProvider } from "./context/AuthContext";
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
           <Route path="/search-invoice" element={<SearchInvoice />} />
           <Route path="/work-order" element={<WorkOrder />} />
           <Route path="/report" element={<Report />} />
+          <Route path="/tracker" element={<Tracker />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

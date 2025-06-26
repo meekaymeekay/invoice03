@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import KanbanHeader from '../components/KanbanHeader';
 import KanbanBoard from '../components/KanbanBoard';
+import ProjectModal from '../components/ProjectModal';
 
 const stages = [
   { id: 'start', title: 'Start' },
@@ -38,25 +39,38 @@ const PageWrapper = styled.div`
   background: #18191b;
 `;
 
+
+
 const Tracker = () => {
   const [cardsByColumn, setCardsByColumn] = useState(initialCards);
+  const [showModal, setShowModal] = useState(false);
 
   // Handlers (stubbed for now)
   const handleSearch = (query) => {
-    // Implement search logic here
     alert('Search for: ' + query);
   };
+  
   const handleRefresh = () => {
-    // Implement refresh logic here
     alert('Refreshed!');
   };
+  
   const handleCreate = () => {
-    // Implement create logic here
-    alert('Create new project!');
+    setShowModal(true);
   };
+  
   const handleCardClick = (card) => {
-    // Implement card click logic here
     alert('Clicked card: ' + card.title);
+  };
+  
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
+  
+  const handleProjectSave = (newProject) => {
+    setCardsByColumn((prev) => ({
+      ...prev,
+      start: [newProject, ...prev.start],
+    }));
   };
 
   return (
@@ -70,6 +84,11 @@ const Tracker = () => {
         columns={stages}
         cardsByColumn={cardsByColumn}
         onCardClick={handleCardClick}
+      />
+      <ProjectModal
+        isOpen={showModal}
+        onClose={handleModalClose}
+        onSave={handleProjectSave}
       />
     </PageWrapper>
   );

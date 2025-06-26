@@ -4,11 +4,11 @@ import KanbanCard from './KanbanCard';
 
 const stageColors = {
   start: '#d46a6a',
-  designApproval: '#d4a86a',
-  cemeteryApproval: '#7ad46a',
-  order: '#7ad46a',
-  production: '#6a9fd4',
-  service: '#6a7ad4',
+  designApproval: '#B48B64',
+  cemeteryApproval: '#B4B361',
+  order: '#77A05C',
+  production: '#658BA0',
+  service: '#7864A0',
 };
 
 const ColumnWrapper = styled.div`

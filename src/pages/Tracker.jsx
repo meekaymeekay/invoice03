@@ -56,6 +56,16 @@ const NotificationWrapper = styled.div`
   }
 `;
 
+const SearchResultsInfo = styled.div`
+  background: rgba(35,36,38,0.92);
+  color: #b48a5a;
+  padding: 12px 32px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-bottom: 1px solid #444;
+`;
+
 const Tracker = () => {
   const [cardsByColumn, setCardsByColumn] = useState(initialCards);
   const [showModal, setShowModal] = useState(false);
@@ -65,6 +75,8 @@ const Tracker = () => {
   const [notification, setNotification] = useState(null);
   const [editingProject, setEditingProject] = useState(null);
   const [loadingProject, setLoadingProject] = useState(false);
+  const [allProjects, setAllProjects] = useState(initialCards); // Store complete dataset
+  const [searchQuery, setSearchQuery] = useState("");
 
   // API call to fetch projects
   const fetchProjects = async () => {
@@ -82,7 +94,14 @@ const Tracker = () => {
       }
       const projectsData = await response.json();
       console.log(projectsData);
-      setCardsByColumn(projectsData);
+      setAllProjects(projectsData); // Store complete dataset
+      
+      // Apply current search if any
+      if (searchQuery.trim()) {
+        applySearch(searchQuery, projectsData);
+      } else {
+        setCardsByColumn(projectsData);
+      }
     } catch (err) {
       console.error('Error fetching projects:', err);
       setError(err.message);
@@ -102,25 +121,39 @@ const Tracker = () => {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // Handlers
-  const handleSearch = (query) => {
+  // Apply search filter to projects
+  const applySearch = (query, projectsData = allProjects) => {
     if (!query.trim()) {
-      fetchProjects(); // Reset to all projects if search is empty
+      setCardsByColumn(projectsData);
       return;
     }
     
-    // Filter projects based on search query (only name/title since that's what we have)
+    const searchTerm = query.toLowerCase();
     const filteredData = {};
-    Object.keys(cardsByColumn).forEach(status => {
-      filteredData[status] = cardsByColumn[status].filter(card => 
-        card.title.toLowerCase().includes(query.toLowerCase()) ||
-        card.id.toLowerCase().includes(query.toLowerCase())
+    
+    Object.keys(projectsData).forEach(status => {
+      filteredData[status] = projectsData[status].filter(card => 
+        card.title.toLowerCase().includes(searchTerm) ||
+        card.id.toLowerCase().includes(searchTerm)
       );
     });
+    
     setCardsByColumn(filteredData);
   };
 
+  // Calculate total search results
+  const getTotalSearchResults = () => {
+    return Object.values(cardsByColumn).reduce((total, columnProjects) => total + columnProjects.length, 0);
+  };
+
+  // Handlers
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    applySearch(query);
+  };
+
   const handleRefresh = () => {
+    setSearchQuery(""); // Clear search when refreshing
     fetchProjects();
   };
 
@@ -222,6 +255,7 @@ const Tracker = () => {
           onSearch={handleSearch}
           onRefresh={handleRefresh}
           onCreate={handleCreate}
+          searchValue={searchQuery}
         />
         <div style={{ 
           display: 'flex', 
@@ -245,6 +279,7 @@ const Tracker = () => {
           onSearch={handleSearch}
           onRefresh={handleRefresh}
           onCreate={handleCreate}
+          searchValue={searchQuery}
         />
         <div style={{ 
           display: 'flex', 
@@ -281,7 +316,13 @@ const Tracker = () => {
         onSearch={handleSearch}
         onRefresh={handleRefresh}
         onCreate={handleCreate}
+        searchValue={searchQuery}
       />
+      {searchQuery.trim() && (
+        <SearchResultsInfo>
+          Found {getTotalSearchResults()} project{getTotalSearchResults() !== 1 ? 's' : ''} matching "{searchQuery}"
+        </SearchResultsInfo>
+      )}
       <KanbanBoard
         columns={stages}
         cardsByColumn={cardsByColumn}

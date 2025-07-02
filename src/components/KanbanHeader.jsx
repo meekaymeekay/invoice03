@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 const HeaderWrapper = styled.div`
@@ -92,8 +92,30 @@ const Button = styled.button`
   }
 `;
 
-const KanbanHeader = ({ onSearch, onRefresh, onCreate }) => {
-  const [search, setSearch] = useState('');
+const KanbanHeader = ({ onSearch, onRefresh, onCreate, searchValue = "" }) => {
+  const [search, setSearch] = useState(searchValue);
+
+  // Update local search state when prop changes (e.g., when refresh clears search)
+  useEffect(() => {
+    setSearch(searchValue);
+  }, [searchValue]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+    onSearch(value); // Real-time search
+  };
+
+  const handleClearSearch = () => {
+    setSearch('');
+    onSearch('');
+  };
+
+  const handleRefresh = () => {
+    setSearch(''); // Clear search input
+    onRefresh();
+  };
+
   return (
     <HeaderWrapper>
       <Left>
@@ -101,12 +123,14 @@ const KanbanHeader = ({ onSearch, onRefresh, onCreate }) => {
           type="text"
           placeholder="Search projects..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={handleSearchChange}
         />
-        <Button onClick={() => onSearch(search)}>Search</Button>
+        {search && (
+          <Button onClick={handleClearSearch}>Clear</Button>
+        )}
       </Left>
       <Right>
-        <Button onClick={onRefresh}>Refresh</Button>
+        <Button onClick={handleRefresh}>Refresh</Button>
         <Button green onClick={onCreate}>Create</Button>
       </Right>
     </HeaderWrapper>

@@ -211,6 +211,8 @@ const SaveButton = styled.button`
 `;
 
 const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject = null, isEditing = false, loadingProject = false }) => {
+  const userRole = localStorage.getItem("role");
+  const isViewer = userRole === "viewer";
   const [formData, setFormData] = useState({
     name: '',
     // Design Approval
@@ -341,11 +343,13 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
     <ModalOverlay>
       <ModalBox>
         <ModalHeader>
-          <ModalTitle>{isEditing ? 'Edit Project' : 'Start New Project'}</ModalTitle>
+          <ModalTitle>{isViewer ? 'View Project Details' : (isEditing ? 'Edit Project' : 'Start New Project')}</ModalTitle>
           <div>
-            <SaveButton onClick={handleSave} disabled={saving || loadingProject}>
-              {saving ? 'SAVING...' : 'SAVE'}
-            </SaveButton>
+            {!isViewer && (
+              <SaveButton onClick={handleSave} disabled={saving || loadingProject}>
+                {saving ? 'SAVING...' : 'SAVE'}
+              </SaveButton>
+            )}
             <ModalClose onClick={handleClose} disabled={saving || loadingProject} style={{ opacity: (saving || loadingProject) ? 0.5 : 1 }}>
               {saving ? 'SAVING...' : 'CLOSE'}
             </ModalClose>
@@ -374,8 +378,13 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               id="project-name"
               value={formData.name}
               onChange={e => handleInputChange('name', e.target.value)}
-              autoFocus
+              autoFocus={!isViewer}
               placeholder="Enter project name..."
+              readOnly={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
             {error && <ErrorMsg>{error}</ErrorMsg>}
           </FormGroup>
@@ -388,6 +397,8 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="checkbox"
               checked={formData.designApprovalComplete}
               onChange={e => handleInputChange('designApprovalComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
             />
             <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
           </CheckboxRow>
@@ -400,6 +411,11 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="date"
               value={formData.cemeterySubmissionDate}
               onChange={e => handleInputChange('cemeterySubmissionDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
           </CheckboxRow>
         </FormSection>
@@ -411,12 +427,19 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="checkbox"
               checked={formData.cemeteryApprovalComplete}
               onChange={e => handleInputChange('cemeteryApprovalComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
             />
             <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
             <DateInput
               type="date"
               value={formData.cemeteryApprovalDate}
               onChange={e => handleInputChange('cemeteryApprovalDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
           </CheckboxRow>
         </FormSection>
@@ -428,12 +451,19 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="checkbox"
               checked={formData.stoneOrderedComplete}
               onChange={e => handleInputChange('stoneOrderedComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
             />
             <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
             <DateInput
               type="date"
               value={formData.stoneOrderedDate}
               onChange={e => handleInputChange('stoneOrderedDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
           </CheckboxRow>
         </FormSection>
@@ -445,12 +475,19 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="checkbox"
               checked={formData.stoneReceivedComplete}
               onChange={e => handleInputChange('stoneReceivedComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
             />
             <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
             <DateInput
               type="date"
               value={formData.stoneReceivedDate}
               onChange={e => handleInputChange('stoneReceivedDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
           </CheckboxRow>
         </FormSection>
@@ -462,24 +499,30 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="checkbox"
               checked={formData.productionComplete}
               onChange={e => handleInputChange('productionComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
             />
             <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
             <ProductionDots>
               <ProductionDot
                 active={formData.productionStage >= 0}
-                onClick={() => handleInputChange('productionStage', 0)}
+                onClick={isViewer ? undefined : () => handleInputChange('productionStage', 0)}
+                style={{ cursor: isViewer ? 'default' : 'pointer' }}
               />
               <ProductionDot
                 active={formData.productionStage >= 1}
-                onClick={() => handleInputChange('productionStage', 1)}
+                onClick={isViewer ? undefined : () => handleInputChange('productionStage', 1)}
+                style={{ cursor: isViewer ? 'default' : 'pointer' }}
               />
               <ProductionDot
                 active={formData.productionStage >= 2}
-                onClick={() => handleInputChange('productionStage', 2)}
+                onClick={isViewer ? undefined : () => handleInputChange('productionStage', 2)}
+                style={{ cursor: isViewer ? 'default' : 'pointer' }}
               />
               <ProductionDot
                 active={formData.productionStage >= 3}
-                onClick={() => handleInputChange('productionStage', 3)}
+                onClick={isViewer ? undefined : () => handleInputChange('productionStage', 3)}
+                style={{ cursor: isViewer ? 'default' : 'pointer' }}
               />
             </ProductionDots>
             <ProductionStage>Pulled</ProductionStage>
@@ -496,6 +539,11 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="date"
               value={formData.photoOrderedDate}
               onChange={e => handleInputChange('photoOrderedDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
           </CheckboxRow>
         </FormSection>
@@ -507,12 +555,19 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="checkbox"
               checked={formData.photoReceivedComplete}
               onChange={e => handleInputChange('photoReceivedComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
             />
             <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
             <DateInput
               type="date"
               value={formData.photoReceivedDate}
               onChange={e => handleInputChange('photoReceivedDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
           </CheckboxRow>
         </FormSection>
@@ -524,12 +579,19 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="checkbox"
               checked={formData.foundationComplete}
               onChange={e => handleInputChange('foundationComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
             />
             <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
             <DateInput
               type="date"
               value={formData.foundationDate}
               onChange={e => handleInputChange('foundationDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
           </CheckboxRow>
         </FormSection>
@@ -541,12 +603,19 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="checkbox"
               checked={formData.paidOffComplete}
               onChange={e => handleInputChange('paidOffComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
             />
             <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
             <DateInput
               type="date"
               value={formData.paidOffDate}
               onChange={e => handleInputChange('paidOffDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
           </CheckboxRow>
         </FormSection>
@@ -558,12 +627,19 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
               type="checkbox"
               checked={formData.setComplete}
               onChange={e => handleInputChange('setComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
             />
             <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
             <DateInput
               type="date"
               value={formData.setDate}
               onChange={e => handleInputChange('setDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
             />
           </CheckboxRow>
         </FormSection>
@@ -574,6 +650,11 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject 
             value={formData.notes}
             onChange={e => handleInputChange('notes', e.target.value)}
             placeholder="Enter notes..."
+            readOnly={isViewer}
+            style={{ 
+              opacity: isViewer ? 0.7 : 1,
+              cursor: isViewer ? 'default' : 'text'
+            }}
           />
         </FormSection>
 

@@ -80,7 +80,46 @@ const LandingPage = () => {
               </OptionCard>
             </>
           )}
-          {/* Add similar conditions for other roles */}
+          {localStorage.getItem("role") === "adminWO" && (
+            <>
+              <OptionCard to="/search-invoice">
+                <OptionIcon src={searchInvoice} alt="Search Invoice" />
+                <OptionText>Search Invoice</OptionText>
+              </OptionCard>
+              <OptionCard to="/search-order">
+                <OptionIcon src={searchImage} alt="Search Order" />
+                <OptionText>Search Order</OptionText>
+              </OptionCard>
+              <OptionCard to="/report">
+                <OptionIcon src={reportImage} alt="Report" />
+                <OptionText>Generate Report</OptionText>
+              </OptionCard>
+              <OptionCard to="/tracker">
+                <OptionIcon src={trackerImage} alt="Project Tracker" />
+                <OptionText>Project Tracker</OptionText>
+              </OptionCard>
+            </>
+          )}
+          {localStorage.getItem("role") === "viewer" && (
+            <>
+              <OptionCard to="/search-invoice">
+                <OptionIcon src={searchInvoice} alt="Search Invoice" />
+                <OptionText>Search Invoice</OptionText>
+              </OptionCard>
+              <OptionCard to="/search-order">
+                <OptionIcon src={searchImage} alt="Search Order" />
+                <OptionText>Search Order</OptionText>
+              </OptionCard>
+              <OptionCard to="/report">
+                <OptionIcon src={reportImage} alt="Report" />
+                <OptionText>Generate Report</OptionText>
+              </OptionCard>
+              <OptionCard to="/tracker">
+                <OptionIcon src={trackerImage} alt="Project Tracker" />
+                <OptionText>Project Tracker</OptionText>
+              </OptionCard>
+            </>
+          )}
         </OptionsGrid>
       </MainContent>
     </PageContainer>

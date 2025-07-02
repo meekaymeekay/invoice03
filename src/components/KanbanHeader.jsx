@@ -102,6 +102,7 @@ const Button = styled.button`
 const KanbanHeader = ({ onSearch, onRefresh, onCreate, searchValue = "" }) => {
   const [search, setSearch] = useState(searchValue);
   const navigate = useNavigate();
+  const userRole = localStorage.getItem("role");
 
   // Update local search state when prop changes (e.g., when refresh clears search)
   useEffect(() => {
@@ -146,7 +147,9 @@ const KanbanHeader = ({ onSearch, onRefresh, onCreate, searchValue = "" }) => {
           Back to Dashboard
         </Button>
         <Button onClick={handleRefresh}>Refresh</Button>
-        <Button green onClick={onCreate}>Create</Button>
+        {userRole !== "viewer" && (
+          <Button green onClick={onCreate}>Create</Button>
+        )}
       </Right>
     </HeaderWrapper>
   );

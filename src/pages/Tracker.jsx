@@ -83,7 +83,7 @@ const Tracker = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:3001/get-projects', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/get-projects`, {
         headers: {
         "Content-Type": "application/json",
         "ngrok-skip-browser-warning": "69420",
@@ -93,7 +93,6 @@ const Tracker = () => {
         throw new Error('Failed to fetch projects');
       }
       const projectsData = await response.json();
-      console.log(projectsData);
       setAllProjects(projectsData); // Store complete dataset
       
       // Apply current search if any
@@ -165,7 +164,7 @@ const Tracker = () => {
   const handleCardClick = async (card) => {
     try {
       setLoadingProject(true);
-      const response = await fetch(`http://localhost:3001/get-project/${encodeURIComponent(card.id)}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/get-project/${encodeURIComponent(card.id)}`, {
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': '69420',
@@ -203,8 +202,8 @@ const Tracker = () => {
       
       const isEditing = editingProject !== null;
       const url = isEditing 
-        ? `http://localhost:3001/update-project/${encodeURIComponent(editingProject.originalId)}`
-        : 'http://localhost:3001/save-project';
+        ? `${process.env.REACT_APP_API_URL}/update-project/${encodeURIComponent(editingProject.originalId)}`
+        : `${process.env.REACT_APP_API_URL}/save-project`;
       
       const method = isEditing ? 'PUT' : 'POST';
       

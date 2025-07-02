@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 
 const HeaderWrapper = styled.div`
   display: flex;
@@ -71,8 +72,11 @@ const Button = styled.button`
   padding: 8px 22px;
   border-radius: 6px;
   border: none;
-  background: ${({ green }) => (green ? '#8fd19e' : '#4a90e2')};
-  color: #232426;
+  background: ${({ green, back }) => 
+    green ? '#8fd19e' : 
+    back ? '#666' : 
+    '#4a90e2'};
+  color: ${({ back }) => back ? '#fff' : '#232426'};
   font-weight: 700;
   font-size: 1.05rem;
   cursor: pointer;
@@ -87,13 +91,17 @@ const Button = styled.button`
     padding: 4px 7px;
   }
   &:hover {
-    background: ${({ green }) => (green ? '#7bc88b' : '#357ab8')};
+    background: ${({ green, back }) => 
+      green ? '#7bc88b' : 
+      back ? '#555' : 
+      '#357ab8'};
     transform: translateY(-2px) scale(1.04);
   }
 `;
 
 const KanbanHeader = ({ onSearch, onRefresh, onCreate, searchValue = "" }) => {
   const [search, setSearch] = useState(searchValue);
+  const navigate = useNavigate();
 
   // Update local search state when prop changes (e.g., when refresh clears search)
   useEffect(() => {
@@ -116,6 +124,10 @@ const KanbanHeader = ({ onSearch, onRefresh, onCreate, searchValue = "" }) => {
     onRefresh();
   };
 
+  const handleBackToDashboard = () => {
+    navigate('/landing-page'); // Navigate back to landing page
+  };
+
   return (
     <HeaderWrapper>
       <Left>
@@ -130,6 +142,9 @@ const KanbanHeader = ({ onSearch, onRefresh, onCreate, searchValue = "" }) => {
         )}
       </Left>
       <Right>
+        <Button back onClick={handleBackToDashboard}>
+          Back to Dashboard
+        </Button>
         <Button onClick={handleRefresh}>Refresh</Button>
         <Button green onClick={onCreate}>Create</Button>
       </Right>

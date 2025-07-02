@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Logout from "../assets/icons/pngwing.com.png";
-import Option from "../components/Option";
 import IconWithText from "../components/IconWithTExt";
 import { Link } from "react-router-dom";
 import invoiceImage from "../assets/images/invoice.png";

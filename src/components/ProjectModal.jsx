@@ -210,7 +210,7 @@ const SaveButton = styled.button`
   }
 `;
 
-const ProjectModal = ({ isOpen, onClose, onSave }) => {
+const ProjectModal = ({ isOpen, onClose, onSave, saving = false }) => {
   const [formData, setFormData] = useState({
     name: '',
     // Design Approval
@@ -257,6 +257,8 @@ const ProjectModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleClose = () => {
+    if (saving) return; // Prevent closing while saving
+    
     setFormData({
       name: '',
       designApprovalComplete: false,
@@ -285,6 +287,8 @@ const ProjectModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleSave = () => {
+    if (saving) return; // Prevent multiple save attempts
+    
     if (!formData.name.trim()) {
       setError('Name is required.');
       return;
@@ -298,7 +302,7 @@ const ProjectModal = ({ isOpen, onClose, onSave }) => {
     };
 
     onSave(newProject);
-    handleClose();
+    // Don't call handleClose() here - let the parent component handle it after successful save
   };
 
   if (!isOpen) return null;
@@ -309,10 +313,12 @@ const ProjectModal = ({ isOpen, onClose, onSave }) => {
         <ModalHeader>
           <ModalTitle>Start New Project</ModalTitle>
           <div>
-            <SaveButton onClick={handleSave}>
-              SAVE
+            <SaveButton onClick={handleSave} disabled={saving}>
+              {saving ? 'SAVING...' : 'SAVE'}
             </SaveButton>
-            <ModalClose onClick={handleClose}>CLOSE</ModalClose>
+            <ModalClose onClick={handleClose} disabled={saving} style={{ opacity: saving ? 0.5 : 1 }}>
+              {saving ? 'SAVING...' : 'CLOSE'}
+            </ModalClose>
           </div>
         </ModalHeader>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 const ModalOverlay = styled.div`
@@ -210,7 +210,7 @@ const SaveButton = styled.button`
   }
 `;
 
-const ProjectModal = ({ isOpen, onClose, onSave, saving = false }) => {
+const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject = null, isEditing = false, loadingProject = false }) => {
   const [formData, setFormData] = useState({
     name: '',
     // Design Approval
@@ -247,6 +247,36 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false }) => {
     notes: ''
   });
   const [error, setError] = useState('');
+
+  // Populate form data when editing
+  useEffect(() => {
+    if (isEditing && editingProject) {
+      setFormData({
+        name: editingProject.name || '',
+        designApprovalComplete: editingProject.designApprovalComplete || false,
+        cemeterySubmissionDate: editingProject.cemeterySubmissionDate || '',
+        cemeteryApprovalComplete: editingProject.cemeteryApprovalComplete || false,
+        cemeteryApprovalDate: editingProject.cemeteryApprovalDate || '',
+        stoneOrderedComplete: editingProject.stoneOrderedComplete || false,
+        stoneOrderedDate: editingProject.stoneOrderedDate || '',
+        stoneReceivedComplete: editingProject.stoneReceivedComplete || false,
+        stoneReceivedDate: editingProject.stoneReceivedDate || '',
+        productionComplete: editingProject.productionComplete || false,
+        productionStage: editingProject.productionStage || 0,
+        photoOrderedDate: editingProject.photoOrderedDate || '',
+        photoReceivedComplete: editingProject.photoReceivedComplete || false,
+        photoReceivedDate: editingProject.photoReceivedDate || '',
+        foundationComplete: editingProject.foundationComplete || false,
+        foundationDate: editingProject.foundationDate || '',
+        paidOffComplete: editingProject.paidOffComplete || false,
+        paidOffDate: editingProject.paidOffDate || '',
+        setComplete: editingProject.setComplete || false,
+        setDate: editingProject.setDate || '',
+        notes: editingProject.notes || ''
+      });
+      setError('');
+    }
+  }, [isEditing, editingProject]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -311,16 +341,31 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false }) => {
     <ModalOverlay>
       <ModalBox>
         <ModalHeader>
-          <ModalTitle>Start New Project</ModalTitle>
+          <ModalTitle>{isEditing ? 'Edit Project' : 'Start New Project'}</ModalTitle>
           <div>
-            <SaveButton onClick={handleSave} disabled={saving}>
+            <SaveButton onClick={handleSave} disabled={saving || loadingProject}>
               {saving ? 'SAVING...' : 'SAVE'}
             </SaveButton>
-            <ModalClose onClick={handleClose} disabled={saving} style={{ opacity: saving ? 0.5 : 1 }}>
+            <ModalClose onClick={handleClose} disabled={saving || loadingProject} style={{ opacity: (saving || loadingProject) ? 0.5 : 1 }}>
               {saving ? 'SAVING...' : 'CLOSE'}
             </ModalClose>
           </div>
         </ModalHeader>
+
+        {loadingProject ? (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '200px',
+            color: '#fff',
+            fontSize: '1.1rem'
+          }}>
+            Loading project details...
+          </div>
+        ) : (
+          <>
+        {/* Form content starts here */}
 
         <FormSection>
           <FormGroup>
@@ -532,6 +577,8 @@ const ProjectModal = ({ isOpen, onClose, onSave, saving = false }) => {
           />
         </FormSection>
 
+          </>
+        )}
       </ModalBox>
     </ModalOverlay>
   );

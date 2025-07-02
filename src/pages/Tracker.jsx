@@ -11,7 +11,7 @@ const stages = [
   { id: "order", title: "Order" },
   { id: "production", title: "Production" },
   { id: "service", title: "Service" },
-  { id: "completed", title: "Completed" },
+  // { id: "completed", title: "Completed" }, // Hidden from Kanban view
 ];
 
 // Example mock data
@@ -63,6 +63,8 @@ const Tracker = () => {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [editingProject, setEditingProject] = useState(null);
+  const [loadingProject, setLoadingProject] = useState(false);
 
   // API call to fetch projects
   const fetchProjects = async () => {
@@ -123,29 +125,68 @@ const Tracker = () => {
   };
 
   const handleCreate = () => {
+    setEditingProject(null); // Clear any editing state
     setShowModal(true);
   };
 
-  const handleCardClick = (card) => {
-    // TODO: Implement card detail view
-    alert("Clicked card: " + card.title + " (Updated: " + card.updated + ")");
-  };
-
-  const handleModalClose = () => {
-    setShowModal(false);
-  };
-
-  const handleProjectSave = async (newProject) => {
+  const handleCardClick = async (card) => {
     try {
-      setSaving(true);
-      
-      const response = await fetch('http://localhost:3001/save-project', {
-        method: 'POST',
+      setLoadingProject(true);
+      const response = await fetch(`http://localhost:3001/get-project/${encodeURIComponent(card.id)}`, {
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': '69420',
         },
-        body: JSON.stringify(newProject),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setEditingProject({
+          ...result.project,
+          originalId: card.id,
+          currentStage: result.currentStage
+        });
+        setShowModal(true);
+      } else {
+        showNotification(result.message, false);
+      }
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      showNotification('Failed to load project details. Please try again.', false);
+    } finally {
+      setLoadingProject(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setEditingProject(null); // Clear editing state when modal closes
+  };
+
+  const handleProjectSave = async (projectData) => {
+    try {
+      setSaving(true);
+      
+      const isEditing = editingProject !== null;
+      const url = isEditing 
+        ? `http://localhost:3001/update-project/${encodeURIComponent(editingProject.originalId)}`
+        : 'http://localhost:3001/save-project';
+      
+      const method = isEditing ? 'PUT' : 'POST';
+      
+      // Add currentStage for updates
+      const payload = isEditing 
+        ? { ...projectData, currentStage: editingProject.currentStage }
+        : projectData;
+      
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': '69420',
+        },
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -154,10 +195,11 @@ const Tracker = () => {
         // Show success notification
         showNotification(result.message, true);
         
-        // Close modal
+        // Close modal and clear editing state
         setShowModal(false);
+        setEditingProject(null);
         
-        // Refresh projects to show the new one
+        // Refresh projects to show the updated/new one
         fetchProjects();
       } else {
         // Show error notification
@@ -250,6 +292,9 @@ const Tracker = () => {
         onClose={handleModalClose}
         onSave={handleProjectSave}
         saving={saving}
+        editingProject={editingProject}
+        isEditing={editingProject !== null}
+        loadingProject={loadingProject}
       />
       {notification && (
         <NotificationWrapper success={notification.success}>

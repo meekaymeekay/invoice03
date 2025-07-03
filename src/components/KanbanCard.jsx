@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FaRegClock } from 'react-icons/fa';
+import { FaRegClock, FaDollarSign } from 'react-icons/fa';
+import { GiStoneBlock } from 'react-icons/gi';
 
 const CardWrapper = styled.div`
   background: ${({ color }) => color || '#b48a5a'};
@@ -58,23 +59,44 @@ const CardTitle = styled.div`
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
   
   @media (max-width: 800px) {
     font-size: 0.97rem;
     margin-bottom: 4px;
-    -webkit-line-clamp: 2;
+    gap: 6px;
   }
   
   @media (max-width: 600px) {
     font-size: 0.91rem;
     margin-bottom: 3px;
+    gap: 4px;
+  }
+`;
+
+const TitleText = styled.span`
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  
+  @media (max-width: 600px) {
     -webkit-line-clamp: 1;
   }
+`;
+
+const StatusIcon = styled.span`
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: #fff;
+  opacity: 0.9;
 `;
 
 const CardDate = styled.div`
@@ -141,7 +163,17 @@ const KanbanCard = ({ card, color, onClick }) => {
     <CardWrapper onClick={onClick} color={color}>
       <CardContent>
         <CardTitle title={card.title}>
-          {card.title}
+          {card.foundationComplete && (
+            <StatusIcon title="Foundation Complete">
+              <GiStoneBlock size={16} />
+            </StatusIcon>
+          )}
+          {card.paidOffComplete && (
+            <StatusIcon title="Paid Off">
+              <FaDollarSign size={14} />
+            </StatusIcon>
+          )}
+          <TitleText>{card.title}</TitleText>
         </CardTitle>
         <CardDate title={`Updated: ${formatDate(card.updated)}`}>
           <IconWrapper>

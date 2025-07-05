@@ -462,6 +462,8 @@ const InvoicehtmlForm = () => {
       }),
     ]);
 
+    // Resize images to standard letter size for print
+    const resizedImageDataUrl1 = await resizeImageToLetterSize(img);
     const resizedImageDataUrl2 = await resizeImageToLetterSize(img2);
 
     // Add the captured images to the PDFs
@@ -472,10 +474,16 @@ const InvoicehtmlForm = () => {
     const pdfBlob = pdf.output("blob");
     const pdfBlob2 = pdf2.output("blob");
 
+    // Convert base64 PNG data to blobs for sending
+    const pngBlob1 = await base64ToBlob(resizedImageDataUrl1, "image/png");
+    const pngBlob2 = await base64ToBlob(resizedImageDataUrl2, "image/png");
+
     // Create a FormData object to send the blobs to the backend
     const finalFormData = new FormData();
     finalFormData.append("pdf", pdfBlob, "invoice.pdf");
     finalFormData.append("pdf2", pdfBlob2, "work-order.pdf");
+    finalFormData.append("png1", pngBlob1, "invoice.png");
+    finalFormData.append("png2", pngBlob2, "work-order.png");
 
     // Round specified values to two decimal places
     for (const key in formData) {
@@ -515,7 +523,7 @@ const InvoicehtmlForm = () => {
       );
 
       if (response.status === 200) {
-        console.log("PDFs and data saved successfully");
+        console.log("PDFs, PNGs and data saved successfully");
         console.log(formData);
         setShowPDF(false);
         localStorage.removeItem("invoiceData");
@@ -524,11 +532,11 @@ const InvoicehtmlForm = () => {
         handleSuccessModalOpen();
         setSaveButtonText("Saved");
       } else {
-        console.error("Failed to save PDFs and data");
+        console.error("Failed to save PDFs, PNGs and data");
         setSaveButtonText("Save");
       }
     } catch (error) {
-      console.error("Error while saving PDFs and data:", error);
+      console.error("Error while saving PDFs, PNGs and data:", error);
       setSaveButtonText("Save");
     }
   };
@@ -539,7 +547,13 @@ const InvoicehtmlForm = () => {
     canvas.width = 2100;
     canvas.height = 2650;
     ctx.drawImage(img, 0, 0, 2100, 2650);
-    return canvas.toDataURL("image/jpeg", 1);
+    return canvas.toDataURL("image/png", 1);
+  };
+
+  const base64ToBlob = async (base64Data, mimeType) => {
+    const response = await fetch(base64Data);
+    const blob = await response.blob();
+    return blob;
   };
 
   const handleSubmit = async (e) => {

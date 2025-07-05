@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
 import { Link } from "react-router-dom";
 import IconWithText from "../components/IconWithTExt";
 import IconHome from "../assets/icons/home.png";
@@ -18,6 +18,15 @@ import { useAuth } from "../context/AuthContext";
 import WorkOrderPDF from "./WorkOrderPDF2";
 import TaxConfig from "../components/TaxConfig";
 import EndNoteConfig from "../components/EndNoteConfig";
+
+// Global styles for Noto Sans font
+const GlobalStyle = createGlobalStyle`
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+  
+  * {
+    font-family: 'Noto Sans', sans-serif;
+  }
+`;
 
 const InvoicehtmlForm = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -634,8 +643,10 @@ const InvoicehtmlForm = () => {
   };
 
   return (
-    <Container>
-      <form onSubmit={handleSubmit}>
+    <>
+      <GlobalStyle />
+      <Container>
+        <form onSubmit={handleSubmit}>
         <NavBar className="nav-bar">
           <StyledLink to="/landing-page">
             <IconWithText iconSrc={IconHome} text="Home" />
@@ -1788,6 +1799,7 @@ const InvoicehtmlForm = () => {
       />
       {showPDF && <WorkOrderPDF />}
     </Container>
+    </>
   );
 };
 
@@ -1797,6 +1809,7 @@ const Container = styled.div`
   width: 900px;
   max-width: 1200px;
   margin: 0 auto;
+  font-family: 'Noto Sans', sans-serif;
 
   @media print {
     .nav-bar {
@@ -1817,20 +1830,25 @@ const NavBar = styled.nav`
   border-radius: 5px;
   border-top: none;
   justify-content: space-between;
+  font-family: 'Noto Sans', sans-serif;
 `;
 
 const StyledLink = styled(Link)`
   text-decoration: none;
   color: #000;
+  font-family: 'Noto Sans', sans-serif;
 `;
 
 const UtilityContainer = styled.div`
   display: flex;
   gap: 30px;
+  font-family: 'Noto Sans', sans-serif;
 `;
 
 const HeadstoneInfoSection = styled.section`
   background: #eec843;
+  font-family: 'Noto Sans', sans-serif;
+  
   .input-row {
     display: flex;
     align-items: center;
@@ -1850,6 +1868,7 @@ const HeadstoneInfoSection = styled.section`
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 3px;
+    font-family: 'Noto Sans', sans-serif;
   }
 
   input[type="submit"] {
@@ -1859,6 +1878,7 @@ const HeadstoneInfoSection = styled.section`
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-family: 'Noto Sans', sans-serif;
   }
 
   input[type="submit"]:hover {
@@ -1889,6 +1909,7 @@ const HeadstoneInfoSection = styled.section`
 const CemetrySection = styled.div`
   background: #5887fb;
   padding: 10px;
+  font-family: 'Noto Sans', sans-serif;
 
   table {
     width: 100%;
@@ -1897,12 +1918,14 @@ const CemetrySection = styled.div`
 
   label {
     font-weight: normal;
+    font-family: 'Noto Sans', sans-serif;
   }
   th,
   td {
     padding: 5px;
     text-align: left;
     vertical-align: middle;
+    font-family: 'Noto Sans', sans-serif;
   }
 
   th {
@@ -1915,6 +1938,7 @@ const CemetrySection = styled.div`
     border: 1px solid #ccc;
     border-radius: 3px;
     padding: 5px; /* Add padding for spacing */
+    font-family: 'Noto Sans', sans-serif;
   }
 
   .input-row select,
@@ -1940,6 +1964,8 @@ const CemetrySection = styled.div`
 const CustomerDetailsSection = styled.section`
   padding: 8px;
   background: #57facb;
+  font-family: 'Noto Sans', sans-serif;
+  
   .row {
     display: flex;
     align-items: center;
@@ -1951,6 +1977,7 @@ const CustomerDetailsSection = styled.section`
 
   .row label {
     margin-right: 20px;
+    font-family: 'Noto Sans', sans-serif;
   }
 
   .row input[type="text"],
@@ -1960,6 +1987,7 @@ const CustomerDetailsSection = styled.section`
     border: 1px solid #ccc;
     border-radius: 3px;
     margin-top: 10px;
+    font-family: 'Noto Sans', sans-serif;
   }
 
   @media screen and (max-width: 480px) {
@@ -1981,6 +2009,8 @@ const AccountsSection = styled.section`
   padding-top: 15px;
   padding-bottom: 20px;
   background: #e7e9eb;
+  font-family: 'Noto Sans', sans-serif;
+  
   .model-row {
     display: flex;
     justify-content: space-around;
@@ -1995,6 +2025,7 @@ const AccountsSection = styled.section`
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 3px;
+    font-family: 'Noto Sans', sans-serif;
   }
   .details-row {
     display: flex;
@@ -2017,6 +2048,7 @@ const AccountsSection = styled.section`
   #details {
     padding: 5px;
     resize: none;
+    font-family: 'Noto Sans', sans-serif;
   }
 
   .notes-input {
@@ -2029,6 +2061,7 @@ const AccountsSection = styled.section`
   #notes {
     padding: 5px;
     resize: none;
+    font-family: 'Noto Sans', sans-serif;
   }
   .grey-highlight {
     background-color: #b9b3b3;
@@ -2037,9 +2070,11 @@ const AccountsSection = styled.section`
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 3px;
+    font-family: 'Noto Sans', sans-serif;
   }
   .end-note {
     text-align: center;
+    font-family: 'Noto Sans', sans-serif;
   }
   .right-section {
     margin-top: 20px;
@@ -2073,4 +2108,5 @@ const SelectModelButton = styled.button`
   border-radius: 4px;
   cursor: pointer;
   margin-right: 10px; /* Add a little spacing to the right */
+  font-family: 'Noto Sans', sans-serif;
 `;

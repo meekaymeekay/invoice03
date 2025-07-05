@@ -1,17 +1,180 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import Logout from "../assets/icons/pngwing.com.png";
-import IconWithText from "../components/IconWithTExt";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { Header } from "../components/SearchStyles";
+import IconWithText from "../components/IconWithTExt";
+
+// Assets
+import Logout from "../assets/icons/pngwing.com.png";
 import invoiceImage from "../assets/images/invoice.png";
 import searchImage from "../assets/images/search.png";
 import reportImage from "../assets/images/report.png";
 import searchInvoice from "../assets/images/pngwing.com.png";
 import trackerImage from "../assets/images/tracker.png";
-import { useAuth } from "../context/AuthContext";
-import { Header } from "../components/SearchStyles";
 
+// Constants
+const USER_ROLES = {
+  ADMIN: "admin",
+  ADMIN_WO: "adminWO",
+  VIEWER: "viewer"
+};
+
+const ROLE_DISPLAY_NAMES = {
+  [USER_ROLES.ADMIN]: "Administrator",
+  [USER_ROLES.ADMIN_WO]: "Work Order Admin",
+  [USER_ROLES.VIEWER]: "Viewer"
+};
+
+const NAVIGATION_OPTIONS = {
+  [USER_ROLES.ADMIN]: [
+    {
+      path: "/invoice-form",
+      icon: invoiceImage,
+      alt: "Create Invoice",
+      text: "Create New Invoice"
+    },
+    {
+      path: "/search-invoice",
+      icon: searchInvoice,
+      alt: "Search Invoice",
+      text: "Search Invoice"
+    },
+    {
+      path: "/search-order",
+      icon: searchImage,
+      alt: "Search Order",
+      text: "Search Order"
+    },
+    {
+      path: "/report",
+      icon: reportImage,
+      alt: "Report",
+      text: "Generate Report"
+    },
+    {
+      path: "/tracker",
+      icon: trackerImage,
+      alt: "Project Tracker",
+      text: "Project Tracker"
+    }
+  ],
+  [USER_ROLES.ADMIN_WO]: [
+    {
+      path: "/search-invoice",
+      icon: searchInvoice,
+      alt: "Search Invoice",
+      text: "Search Invoice"
+    },
+    {
+      path: "/search-order",
+      icon: searchImage,
+      alt: "Search Order",
+      text: "Search Order"
+    },
+    {
+      path: "/report",
+      icon: reportImage,
+      alt: "Report",
+      text: "Generate Report"
+    },
+    {
+      path: "/tracker",
+      icon: trackerImage,
+      alt: "Project Tracker",
+      text: "Project Tracker"
+    }
+  ],
+  [USER_ROLES.VIEWER]: [
+    {
+      path: "/search-invoice",
+      icon: searchInvoice,
+      alt: "Search Invoice",
+      text: "Search Invoice"
+    },
+    {
+      path: "/search-order",
+      icon: searchImage,
+      alt: "Search Order",
+      text: "Search Order"
+    },
+    {
+      path: "/report",
+      icon: reportImage,
+      alt: "Report",
+      text: "Generate Report"
+    },
+    {
+      path: "/tracker",
+      icon: trackerImage,
+      alt: "Project Tracker",
+      text: "Project Tracker"
+    }
+  ]
+};
+
+// Utility functions
+const getUserRole = () => {
+  return localStorage.getItem("role") || USER_ROLES.VIEWER;
+};
+
+const getUserDisplayName = (role) => {
+  return ROLE_DISPLAY_NAMES[role] || ROLE_DISPLAY_NAMES[USER_ROLES.VIEWER];
+};
+
+const handleLogout = () => {
+  localStorage.removeItem("role");
+  localStorage.removeItem("username");
+};
+
+// Sub-components
+const NavigationOption = ({ option }) => (
+  <OptionCard to={option.path}>
+    <OptionIcon src={option.icon} alt={option.alt} />
+    <OptionText>{option.text}</OptionText>
+  </OptionCard>
+);
+
+const UserInfoSection = () => {
+  const role = getUserRole();
+  const username = localStorage.getItem("username") || "Unknown User";
+  
+  return (
+    <UserInfo>
+      <UserRole>{getUserDisplayName(role)}</UserRole>
+      <Username>{username}</Username>
+    </UserInfo>
+  );
+};
+
+const LogoutButton = () => (
+  <StyledLink to="/" onClick={handleLogout}>
+    <IconWithText iconSrc={Logout} text="Logout" />
+  </StyledLink>
+);
+
+const WelcomeSection = () => (
+  <WelcomeContainer>
+    <WelcomeTitle>Welcome to Headstone World</WelcomeTitle>
+    <WelcomeSubtitle>Select an option below to get started</WelcomeSubtitle>
+  </WelcomeContainer>
+);
+
+const NavigationGrid = () => {
+  const userRole = getUserRole();
+  const navigationOptions = NAVIGATION_OPTIONS[userRole] || [];
+
+  return (
+    <OptionsGrid>
+      {navigationOptions.map((option, index) => (
+        <NavigationOption key={`${option.path}-${index}`} option={option} />
+      ))}
+    </OptionsGrid>
+  );
+};
+
+// Main component
 const LandingPage = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -22,110 +185,31 @@ const LandingPage = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  const userRole = useMemo(() => getUserRole(), []);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <PageContainer>
       <Header>
         <LogoSection>
           <Logo>Headstone World</Logo>
-          <UserInfo>
-            <UserRole>
-              {localStorage.getItem("role") === "admin"
-                ? "Administrator"
-                : localStorage.getItem("role") === "adminWO"
-                ? "Work Order Admin"
-                : "Viewer"}
-            </UserRole>
-            <Username>{localStorage.getItem("username")}</Username>
-          </UserInfo>
+          <UserInfoSection />
         </LogoSection>
-        <StyledLink
-          to="/"
-          onClick={() => {
-            localStorage.removeItem("role");
-            localStorage.removeItem("username");
-          }}
-        >
-          <IconWithText iconSrc={Logout} text="Logout" />
-        </StyledLink>
+        <LogoutButton />
       </Header>
 
       <MainContent>
-        <WelcomeSection>
-          <h1>Welcome to Headstone World</h1>
-          <p>Select an option below to get started</p>
-        </WelcomeSection>
-
-        <OptionsGrid>
-          {localStorage.getItem("role") === "admin" && (
-            <>
-              <OptionCard to="/invoice-form">
-                <OptionIcon src={invoiceImage} alt="Create Invoice" />
-                <OptionText>Create New Invoice</OptionText>
-              </OptionCard>
-              <OptionCard to="/search-invoice">
-                <OptionIcon src={searchInvoice} alt="Search Invoice" />
-                <OptionText>Search Invoice</OptionText>
-              </OptionCard>
-              <OptionCard to="/search-order">
-                <OptionIcon src={searchImage} alt="Search Order" />
-                <OptionText>Search Order</OptionText>
-              </OptionCard>
-              <OptionCard to="/report">
-                <OptionIcon src={reportImage} alt="Report" />
-                <OptionText>Generate Report</OptionText>
-              </OptionCard>
-              <OptionCard to="/tracker">
-                <OptionIcon src={trackerImage} alt="Project Tracker" />
-                <OptionText>Project Tracker</OptionText>
-              </OptionCard>
-            </>
-          )}
-          {localStorage.getItem("role") === "adminWO" && (
-            <>
-              <OptionCard to="/search-invoice">
-                <OptionIcon src={searchInvoice} alt="Search Invoice" />
-                <OptionText>Search Invoice</OptionText>
-              </OptionCard>
-              <OptionCard to="/search-order">
-                <OptionIcon src={searchImage} alt="Search Order" />
-                <OptionText>Search Order</OptionText>
-              </OptionCard>
-              <OptionCard to="/report">
-                <OptionIcon src={reportImage} alt="Report" />
-                <OptionText>Generate Report</OptionText>
-              </OptionCard>
-              <OptionCard to="/tracker">
-                <OptionIcon src={trackerImage} alt="Project Tracker" />
-                <OptionText>Project Tracker</OptionText>
-              </OptionCard>
-            </>
-          )}
-          {localStorage.getItem("role") === "viewer" && (
-            <>
-              <OptionCard to="/search-invoice">
-                <OptionIcon src={searchInvoice} alt="Search Invoice" />
-                <OptionText>Search Invoice</OptionText>
-              </OptionCard>
-              <OptionCard to="/search-order">
-                <OptionIcon src={searchImage} alt="Search Order" />
-                <OptionText>Search Order</OptionText>
-              </OptionCard>
-              <OptionCard to="/report">
-                <OptionIcon src={reportImage} alt="Report" />
-                <OptionText>Generate Report</OptionText>
-              </OptionCard>
-              <OptionCard to="/tracker">
-                <OptionIcon src={trackerImage} alt="Project Tracker" />
-                <OptionText>Project Tracker</OptionText>
-              </OptionCard>
-            </>
-          )}
-        </OptionsGrid>
+        <WelcomeSection />
+        <NavigationGrid />
       </MainContent>
     </PageContainer>
   );
 };
 
+// Styled Components
 const PageContainer = styled.div`
   min-height: 100vh;
   background: #f8f9fa;
@@ -154,20 +238,21 @@ const MainContent = styled.main`
   padding: 20px;
 `;
 
-const WelcomeSection = styled.div`
+const WelcomeContainer = styled.div`
   text-align: center;
   margin-bottom: 40px;
+`;
 
-  h1 {
-    color: #2c3e50;
-    font-size: 32px;
-    margin-bottom: 10px;
-  }
+const WelcomeTitle = styled.h1`
+  color: #2c3e50;
+  font-size: 32px;
+  margin-bottom: 10px;
+`;
 
-  p {
-    color: #666;
-    font-size: 18px;
-  }
+const WelcomeSubtitle = styled.p`
+  color: #666;
+  font-size: 18px;
+  margin: 0;
 `;
 
 const OptionsGrid = styled.div`
@@ -184,10 +269,16 @@ const OptionCard = styled(Link)`
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   text-decoration: none;
   text-align: center;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease-in-out;
 
   &:hover {
     transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
   }
 `;
 
@@ -195,12 +286,18 @@ const OptionIcon = styled.img`
   width: 64px;
   height: 64px;
   margin-bottom: 15px;
+  transition: transform 0.2s ease-in-out;
+
+  ${OptionCard}:hover & {
+    transform: scale(1.05);
+  }
 `;
 
 const OptionText = styled.h3`
   margin: 0;
   color: #333;
   font-size: 18px;
+  font-weight: 600;
 `;
 
 const UserInfo = styled.div`

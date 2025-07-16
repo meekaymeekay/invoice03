@@ -1,0 +1,668 @@
+import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+`;
+
+const ModalBox = styled.div`
+  background: #232426;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  position: relative;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #444;
+`;
+
+const ModalTitle = styled.div`
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+`;
+
+const ModalClose = styled.button`
+  background: #666;
+  border: none;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 12px;
+  &:hover {
+    background: #555;
+  }
+`;
+
+const FormSection = styled.div`
+  margin-bottom: 24px;
+`;
+
+const SectionTitle = styled.div`
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const FormRow = styled.div`
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: center;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+`;
+
+const ModalLabel = styled.label`
+  color: #b48a5a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+`;
+
+const ModalInput = styled.input`
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #18191b;
+  color: #fff;
+  font-size: 0.9rem;
+  &:focus {
+    border: 1px solid #b48a5a;
+    outline: none;
+  }
+`;
+
+const CheckboxRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+`;
+
+const CheckboxLabel = styled.label`
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  min-width: 160px;
+  flex-shrink: 0;
+`;
+
+const Checkbox = styled.input`
+  width: 18px;
+  height: 18px;
+  accent-color: #8fd19e;
+  margin-right: 8px;
+`;
+
+const DateInput = styled.input`
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #18191b;
+  color: #fff;
+  font-size: 0.85rem;
+  width: 100px;
+  &:focus {
+    border: 1px solid #b48a5a;
+    outline: none;
+  }
+`;
+
+const ProductionRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+`;
+
+const ProductionDots = styled.div`
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-right: 12px;
+`;
+
+const ProductionDot = styled.div`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: ${props => props.active ? '#8fd19e' : '#444'};
+  cursor: pointer;
+`;
+
+const ProductionStage = styled.span`
+  color: #b48a5a;
+  font-size: 0.75rem;
+  margin-left: 8px;
+  margin-right: 8px;
+`;
+
+const NotesTextarea = styled.textarea`
+  width: 100%;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #18191b;
+  color: #fff;
+  font-size: 0.9rem;
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+  &:focus {
+    border: 1px solid #b48a5a;
+    outline: none;
+  }
+`;
+
+const ErrorMsg = styled.div`
+  color: #ff6a6a;
+  font-size: 0.85rem;
+  margin-top: 4px;
+`;
+
+const SaveButton = styled.button`
+  background: #8fd19e;
+  border: none;
+  color: #232426;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    background: #7bc88b;
+  }
+  &:disabled {
+    background: #666;
+    cursor: not-allowed;
+  }
+`;
+
+const ProjectModal = ({ isOpen, onClose, onSave, saving = false, editingProject = null, isEditing = false, loadingProject = false }) => {
+  const userRole = localStorage.getItem("role");
+  const isViewer = userRole === "viewer";
+  const [formData, setFormData] = useState({
+    name: '',
+    // Design Approval
+    designApprovalComplete: false,
+    // Cemetery Submission
+    cemeterySubmissionDate: '',
+    // Cemetery Approval
+    cemeteryApprovalComplete: false,
+    cemeteryApprovalDate: '',
+    // Stone Ordered
+    stoneOrderedComplete: false,
+    stoneOrderedDate: '',
+    // Stone Received
+    stoneReceivedComplete: false,
+    stoneReceivedDate: '',
+    // Production
+    productionComplete: false,
+    productionStage: 0, // 0-3 for the dots
+    // Photo Ordered
+    photoOrderedDate: '',
+    // Photo Received
+    photoReceivedComplete: false,
+    photoReceivedDate: '',
+    // Foundation
+    foundationComplete: false,
+    foundationDate: '',
+    // Paid Off
+    paidOffComplete: false,
+    paidOffDate: '',
+    // Set
+    setComplete: false,
+    setDate: '',
+    // Notes
+    notes: ''
+  });
+  const [error, setError] = useState('');
+
+  // Populate form data when editing
+  useEffect(() => {
+    if (isEditing && editingProject) {
+      setFormData({
+        name: editingProject.name || '',
+        designApprovalComplete: editingProject.designApprovalComplete || false,
+        cemeterySubmissionDate: editingProject.cemeterySubmissionDate || '',
+        cemeteryApprovalComplete: editingProject.cemeteryApprovalComplete || false,
+        cemeteryApprovalDate: editingProject.cemeteryApprovalDate || '',
+        stoneOrderedComplete: editingProject.stoneOrderedComplete || false,
+        stoneOrderedDate: editingProject.stoneOrderedDate || '',
+        stoneReceivedComplete: editingProject.stoneReceivedComplete || false,
+        stoneReceivedDate: editingProject.stoneReceivedDate || '',
+        productionComplete: editingProject.productionComplete || false,
+        productionStage: editingProject.productionStage || 0,
+        photoOrderedDate: editingProject.photoOrderedDate || '',
+        photoReceivedComplete: editingProject.photoReceivedComplete || false,
+        photoReceivedDate: editingProject.photoReceivedDate || '',
+        foundationComplete: editingProject.foundationComplete || false,
+        foundationDate: editingProject.foundationDate || '',
+        paidOffComplete: editingProject.paidOffComplete || false,
+        paidOffDate: editingProject.paidOffDate || '',
+        setComplete: editingProject.setComplete || false,
+        setDate: editingProject.setDate || '',
+        notes: editingProject.notes || ''
+      });
+      setError('');
+    }
+  }, [isEditing, editingProject]);
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setError('');
+  };
+
+  const handleClose = () => {
+    if (saving) return; // Prevent closing while saving
+    
+    setFormData({
+      name: '',
+      designApprovalComplete: false,
+      cemeterySubmissionDate: '',
+      cemeteryApprovalComplete: false,
+      cemeteryApprovalDate: '',
+      stoneOrderedComplete: false,
+      stoneOrderedDate: '',
+      stoneReceivedComplete: false,
+      stoneReceivedDate: '',
+      productionComplete: false,
+      productionStage: 0,
+      photoOrderedDate: '',
+      photoReceivedComplete: false,
+      photoReceivedDate: '',
+      foundationComplete: false,
+      foundationDate: '',
+      paidOffComplete: false,
+      paidOffDate: '',
+      setComplete: false,
+      setDate: '',
+      notes: ''
+    });
+    setError('');
+    onClose();
+  };
+
+  const handleSave = () => {
+    if (saving) return; // Prevent multiple save attempts
+    
+    if (!formData.name.trim()) {
+      setError('Name is required.');
+      return;
+    }
+
+    const newProject = {
+      id: Date.now().toString(),
+      title: formData.name,
+      updated: new Date().toLocaleDateString(),
+      ...formData
+    };
+
+    onSave(newProject);
+    // Don't call handleClose() here - let the parent component handle it after successful save
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <ModalOverlay>
+      <ModalBox>
+        <ModalHeader>
+          <ModalTitle>{isViewer ? 'View Project Details' : (isEditing ? 'Edit Project' : 'Start New Project')}</ModalTitle>
+          <div>
+            {!isViewer && (
+              <SaveButton onClick={handleSave} disabled={saving || loadingProject}>
+                {saving ? 'SAVING...' : 'SAVE'}
+              </SaveButton>
+            )}
+            <ModalClose onClick={handleClose} disabled={saving || loadingProject} style={{ opacity: (saving || loadingProject) ? 0.5 : 1 }}>
+              {saving ? 'SAVING...' : 'CLOSE'}
+            </ModalClose>
+          </div>
+        </ModalHeader>
+
+        {loadingProject ? (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '200px',
+            color: '#fff',
+            fontSize: '1.1rem'
+          }}>
+            Loading project details...
+          </div>
+        ) : (
+          <>
+        {/* Form content starts here */}
+
+        <FormSection>
+          <FormGroup>
+            <ModalLabel htmlFor="project-name">NAME:</ModalLabel>
+            <ModalInput
+              id="project-name"
+              value={formData.name}
+              onChange={e => handleInputChange('name', e.target.value)}
+              autoFocus={!isViewer}
+              placeholder="Enter project name..."
+              readOnly={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+            {error && <ErrorMsg>{error}</ErrorMsg>}
+          </FormGroup>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel>DESIGN APPROVAL</CheckboxLabel>
+            <Checkbox
+              type="checkbox"
+              checked={formData.designApprovalComplete}
+              onChange={e => handleInputChange('designApprovalComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
+            />
+            <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel>CEMETERY SUBMISSION</CheckboxLabel>
+            <DateInput
+              type="date"
+              value={formData.cemeterySubmissionDate}
+              onChange={e => handleInputChange('cemeterySubmissionDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel>CEMETERY APPROVAL</CheckboxLabel>
+            <Checkbox
+              type="checkbox"
+              checked={formData.cemeteryApprovalComplete}
+              onChange={e => handleInputChange('cemeteryApprovalComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
+            />
+            <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
+            <DateInput
+              type="date"
+              value={formData.cemeteryApprovalDate}
+              onChange={e => handleInputChange('cemeteryApprovalDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel>STONE ORDERED</CheckboxLabel>
+            <Checkbox
+              type="checkbox"
+              checked={formData.stoneOrderedComplete}
+              onChange={e => handleInputChange('stoneOrderedComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
+            />
+            <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
+            <DateInput
+              type="date"
+              value={formData.stoneOrderedDate}
+              onChange={e => handleInputChange('stoneOrderedDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel>STONE RECEIVED</CheckboxLabel>
+            <Checkbox
+              type="checkbox"
+              checked={formData.stoneReceivedComplete}
+              onChange={e => handleInputChange('stoneReceivedComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
+            />
+            <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
+            <DateInput
+              type="date"
+              value={formData.stoneReceivedDate}
+              onChange={e => handleInputChange('stoneReceivedDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <SectionTitle style={{color: '#8fd19e'}}>PRODUCTION</SectionTitle>
+          <ProductionRow>
+            <Checkbox
+              type="checkbox"
+              checked={formData.productionComplete}
+              onChange={e => handleInputChange('productionComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
+            />
+            <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
+            <ProductionDots>
+              <ProductionDot
+                active={formData.productionStage >= 0}
+                onClick={isViewer ? undefined : () => handleInputChange('productionStage', 0)}
+                style={{ cursor: isViewer ? 'default' : 'pointer' }}
+              />
+              <ProductionDot
+                active={formData.productionStage >= 1}
+                onClick={isViewer ? undefined : () => handleInputChange('productionStage', 1)}
+                style={{ cursor: isViewer ? 'default' : 'pointer' }}
+              />
+              <ProductionDot
+                active={formData.productionStage >= 2}
+                onClick={isViewer ? undefined : () => handleInputChange('productionStage', 2)}
+                style={{ cursor: isViewer ? 'default' : 'pointer' }}
+              />
+              <ProductionDot
+                active={formData.productionStage >= 3}
+                onClick={isViewer ? undefined : () => handleInputChange('productionStage', 3)}
+                style={{ cursor: isViewer ? 'default' : 'pointer' }}
+              />
+            </ProductionDots>
+            <ProductionStage>Pulled</ProductionStage>
+            <ProductionStage>Sands</ProductionStage>
+            <ProductionStage>Laser</ProductionStage>
+            <ProductionStage>Paint</ProductionStage>
+          </ProductionRow>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel>PHOTO ORDERED</CheckboxLabel>
+            <DateInput
+              type="date"
+              value={formData.photoOrderedDate}
+              onChange={e => handleInputChange('photoOrderedDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel>PHOTO RECEIVED</CheckboxLabel>
+            <Checkbox
+              type="checkbox"
+              checked={formData.photoReceivedComplete}
+              onChange={e => handleInputChange('photoReceivedComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
+            />
+            <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
+            <DateInput
+              type="date"
+              value={formData.photoReceivedDate}
+              onChange={e => handleInputChange('photoReceivedDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel style={{color: '#8fd19e'}}>FOUNDATION</CheckboxLabel>
+            <Checkbox
+              type="checkbox"
+              checked={formData.foundationComplete}
+              onChange={e => handleInputChange('foundationComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
+            />
+            <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
+            <DateInput
+              type="date"
+              value={formData.foundationDate}
+              onChange={e => handleInputChange('foundationDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel>PAID OFF</CheckboxLabel>
+            <Checkbox
+              type="checkbox"
+              checked={formData.paidOffComplete}
+              onChange={e => handleInputChange('paidOffComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
+            />
+            <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
+            <DateInput
+              type="date"
+              value={formData.paidOffDate}
+              onChange={e => handleInputChange('paidOffDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <CheckboxRow>
+            <CheckboxLabel>SET</CheckboxLabel>
+            <Checkbox
+              type="checkbox"
+              checked={formData.setComplete}
+              onChange={e => handleInputChange('setComplete', e.target.checked)}
+              disabled={isViewer}
+              style={{ opacity: isViewer ? 0.5 : 1 }}
+            />
+            <span style={{color: '#8fd19e', fontSize: '0.8rem', marginRight: '20px'}}>Complete</span>
+            <DateInput
+              type="date"
+              value={formData.setDate}
+              onChange={e => handleInputChange('setDate', e.target.value)}
+              disabled={isViewer}
+              style={{ 
+                opacity: isViewer ? 0.7 : 1,
+                cursor: isViewer ? 'default' : 'text'
+              }}
+            />
+          </CheckboxRow>
+        </FormSection>
+
+        <FormSection>
+          <SectionTitle>NOTES</SectionTitle>
+          <NotesTextarea
+            value={formData.notes}
+            onChange={e => handleInputChange('notes', e.target.value)}
+            placeholder="Enter notes..."
+            readOnly={isViewer}
+            style={{ 
+              opacity: isViewer ? 0.7 : 1,
+              cursor: isViewer ? 'default' : 'text'
+            }}
+          />
+        </FormSection>
+
+          </>
+        )}
+      </ModalBox>
+    </ModalOverlay>
+  );
+};
+
+export default ProjectModal; 
